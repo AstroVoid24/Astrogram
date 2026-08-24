@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <!-- Without this a phone pretends to be a 980px-wide desktop and shrinks
+         everything until it is unreadable. This is the single most important
+         line for making a page work on a phone. -->
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#05051f">
+    <title>Astrogram</title>
+    <script src='https://code.jquery.com/jquery-4.0.0.js'></script>
+    <style>
+        *,*::before,*::after {
+            box-sizing: border-box;
+        }
+        /* ===== COSMIC BACKGROUND ===== */
+        html, body { height: 100%; }
+        html { -webkit-text-size-adjust: 100%; }   /* stop phones resizing text on rotate */
+        body {
+            margin: 0;
+            background: #05051f;
+            color: #e0e0ff;
+            font-family: Arial, Helvetica, sans-serif;
+            min-height: 100vh;
+            /* 100dvh follows the phone's shrinking address bar; 100vh does not,
+               which is what causes that jumping gap at the bottom when scrolling. */
+            min-height: 100dvh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
+            box-sizing: border-box;
+            overflow-x: hidden;
+            position: relative;
+        }
+        body::before {
+            content: "";
+            position: fixed; top: 0; right: 0; bottom: 0; left: 0; z-index: -2;
+            background:
+                radial-gradient(ellipse 70% 50% at 50% 0%,  rgba(88, 28, 135, .35), transparent 70%),
+                radial-gradient(ellipse 60% 50% at 15% 85%, rgba(30, 64, 175, .22), transparent 70%),
+                radial-gradient(ellipse 50% 40% at 85% 75%, rgba(168, 85, 247, .16), transparent 70%),
+                #05051f;
+        }
+        #stars, #stars2 {
+            position: fixed; top: 0; right: 0; bottom: 0; left: 0;
+            z-index: -1; pointer-events: none;
+        }
+        #stars  { animation: drift 220s linear infinite; }
+        #stars2 { animation: drift 140s linear infinite reverse; opacity: .6; }
+        @keyframes drift { from { transform: translateY(0); } to { transform: translateY(-800px); } }
+        .star {
+            position: absolute; border-radius: 50%; background: #fff;
+            animation: twinkle 4s ease-in-out infinite;
+        }
+        @keyframes twinkle { 0%,100% { opacity: .25; } 50% { opacity: 1; } }
+
+        /* ===== HEADER ===== */
+        h1 {
+            margin: 8px 0 2px;
+            font-size: 40px; font-weight: 800; letter-spacing: 2px;
+            text-shadow: 0 0 26px rgba(168, 85, 247, .55);
+        }
+        h1 .accent { color: #a855f7; }
+        .tagline {
+            margin: 0 0 26px;
+            font-size: 13px; letter-spacing: 4px; text-transform: uppercase; color: #8b8bb8;
+        }
+
+        /* ===== THE CARDS ===== */
+        .card {
+            width: 380px; max-width: 100%;
+            padding: 32px 30px;
+            background: linear-gradient(145deg, rgba(10,10,46,.92), rgba(26,26,74,.92));
+            border: 1px solid #4b0082;
+            border-radius: 16px;
+            box-shadow: 0 0 30px rgba(138,43,226,.4), 0 12px 40px rgba(0,0,0,.7);
+            backdrop-filter: blur(4px);
+        }
+        .card h2 { margin: 0 0 6px; font-size: 21px; color: #e0e0ff; text-align: center; }
+        .card .hint {
+            margin: 0 0 24px; font-size: 13px; color: #8b8bb8; text-align: center; line-height: 1.5;
+        }
+        label {
+            display: block; margin-bottom: 6px;
+            font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; color: #9aa0c0;
+        }
+        input {
+            width: 100%; padding: 13px 15px; margin-bottom: 16px;
+            /* 16px is a hard minimum: iOS Safari zooms the whole page in when
+               you tap an input with smaller text, and never zooms back out. */
+            font-size: 16px;
+            background: #14123a; border: 1px solid #4b0082; border-radius: 9px;
+            color: #e0e0ff; outline: none; box-sizing: border-box;
+            transition: border-color .2s, box-shadow .2s;
+            -webkit-appearance: none;   /* stops iOS adding its own inner shadow */
+        }
+        input:focus { border-color: #a855f7; box-shadow: 0 0 14px rgba(168,85,247,.5); }
+        input::placeholder { color: #55557a; }
+
+        /* ===== SHOW / HIDE PASSWORD ===== */
+        .pw-wrap { position: relative; margin-bottom: 16px; }
+        .pw-wrap input {
+            margin-bottom: 0;
+            padding-right: 50px;        /* room so the text never runs under the eye */
+        }
+        .eye {
+            position: absolute; top: 0; right: 0;
+            height: 100%; width: 46px;
+            display: flex; align-items: center; justify-content: center;
+            background: transparent; border: none; padding: 0;
+            color: #6b6b90; cursor: pointer;
+            border-radius: 0 9px 9px 0;
+            transition: color .2s;
+        }
+        .eye:active { color: #c4b5fd; }
+        .eye svg { width: 21px; height: 21px; display: block; }
+        /* closed eye hidden until the password is showing */
+        .eye .shut { display: none; }
+        .eye.open .look { display: none; }
+        .eye.open .shut { display: block; }
+        .eye.open { color: #a855f7; }
+        /* hide the browser's own reveal button so there are not two */
+        input[type="password"]::-ms-reveal,
+        input[type="password"]::-ms-clear { display: none; }
+
+        .primary {
+            width: 100%; padding: 15px;
+            font-size: 15px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase;
+            color: #fff;
+            background: linear-gradient(135deg, #7c3aed, #4c1d95);
+            border: 1px solid #a855f7; border-radius: 11px; cursor: pointer;
+            box-shadow: 0 0 22px rgba(168,85,247,.4);
+            transition: transform .15s, box-shadow .25s;
+        }
+        .primary:disabled { opacity: .55; cursor: wait; transform: none; }
+
+        .secondary {
+            width: 100%; margin-top: 10px; padding: 12px;
+            font-size: 13px; color: #9aa0c0;
+            background: transparent; border: 1px solid #2d2d55; border-radius: 9px; cursor: pointer;
+            transition: border-color .2s, color .2s;
+        }
+
+        .footer { margin-top: 26px; font-size: 12px; color: #4b4b6e; letter-spacing: 1px; }
+
+        /* ===== REMEMBER ME ===== */
+        .remember {
+            display: flex; align-items: center; gap: 10px;
+            margin: 2px 0 18px;
+            font-size: 13px; color: #9aa0c0;
+            cursor: pointer; user-select: none;
+        }
+        .remember input {
+            width: 19px; height: 19px; margin: 0; flex: none;
+            accent-color: #a855f7;      /* colours the tick without extra markup */
+            cursor: pointer;
+        }
+
+        /* ===== Display ===== */
+        #LoginPage  { display: block; }
+        #SignUpPage { display: none; }
+
+        /* ===== POP-UP (same shape as AstroKassa's) ===== */
+        #PopupOverlay {
+            position: fixed; top: 0; right: 0; bottom: 0; left: 0;
+            background: rgba(0,0,0,.72);
+            z-index: 9999;
+            display: flex; align-items: center; justify-content: center;
+            animation: fade .2s ease-out;
+        }
+        @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+        #PopupBox {
+            position: relative;
+            width: 400px; max-width: calc(100vw - 40px);
+            padding: 34px 30px 28px;
+            text-align: center;
+            background: linear-gradient(145deg, #0a0a2e, #1a1a4a);
+            border: 1px solid #4b0082; border-radius: 16px;
+            box-shadow: 0 0 26px rgba(138,43,226,.6), 0 10px 34px rgba(0,0,0,.8);
+            animation: pop .32s cubic-bezier(.2,1.5,.4,1);
+        }
+        @keyframes pop { from { opacity: 0; transform: scale(.85); } to { opacity: 1; transform: scale(1); } }
+        #PopupClose {
+            position: absolute; top: 10px; right: 12px;
+            background: transparent; border: none; color: #6b7280;
+            font-size: 22px; line-height: 1; cursor: pointer; padding: 4px 8px;
+        }
+        #PopupIcon  { font-size: 48px; line-height: 1; margin-bottom: 12px; }
+        #PopupTitle { margin: 0 0 8px; font-size: 22px; font-weight: 800; color: #e0e0ff; }
+        #PopupText  { margin: 0; font-size: 14px; color: #9aa0c0; line-height: 1.6; }
+        #PopupBox.good #PopupTitle { color: #4ade80; }
+        #PopupBox.bad  #PopupTitle { color: #f87171; }
+        #PopupBox.warn #PopupTitle { color: #fbbf24; }
+
+        /* ===== PHONES ===== */
+        @media (max-width: 480px) {
+            body { padding: 24px 14px; justify-content: flex-start; padding-top: 32px; }
+
+            svg { width: 108px; height: 62px; }
+            h1 { font-size: 31px; letter-spacing: 1px; }
+            .tagline { font-size: 11px; letter-spacing: 3px; margin-bottom: 20px; }
+
+            .card { width: 100%; padding: 24px 20px; border-radius: 14px; }
+            .card h2 { font-size: 19px; }
+            .card .hint { font-size: 12.5px; margin-bottom: 20px; }
+
+            /* Fingers need roughly 44px of height to hit reliably */
+            .primary   { padding: 16px; }
+            .secondary { padding: 14px; }
+
+            #PopupBox  { padding: 30px 22px 24px; border-radius: 14px; }
+            #PopupIcon { font-size: 42px; }
+            #PopupTitle{ font-size: 19px; }
+            #PopupClose{ font-size: 26px; padding: 8px 12px; }   /* bigger tap area */
+
+            .footer { margin-top: 20px; font-size: 11px; }
+        }
+
+        /* Very small phones, and landscape where height is the scarce thing */
+        @media (max-width: 340px) {
+            h1 { font-size: 26px; }
+            .card { padding: 20px 16px; }
+        }
+        @media (max-height: 520px) and (orientation: landscape) {
+            body { justify-content: flex-start; padding-top: 20px; }
+            svg { display: none; }
+            h1 { font-size: 24px; }
+            .tagline { margin-bottom: 14px; }
+            .card .hint { display: none; }
+        }
+
+        /* Phones that cannot animate 190 stars smoothly, and anyone who has
+           asked their system to keep motion to a minimum. */
+        @media (prefers-reduced-motion: reduce) {
+            #stars, #stars2, .star, #PopupBox, #PopupOverlay { animation: none !important; }
+        }
+    .ban-reasons { margin: 8px 0 0; padding-left: 20px; text-align: left; }
+    .ban-reasons li { margin: 3px 0; color: #fca5a5; font-size: 14px; }
+
+    /* hover only where there is a pointer - on a phone these used to
+       stick after the first tap, so everything needed tapping twice */
+    @media (hover: hover) and (pointer: fine) {
+    .eye:hover  { color: #a855f7; }
+    .primary:hover:not(:disabled) {
+                transform: translateY(-2px); box-shadow: 0 0 36px rgba(168,85,247,.7);
+            }
+    .secondary:hover { border-color: #a855f7; color: #c4b5fd; }
+    .remember:hover { color: #c4b5fd; }
+    #PopupClose:hover { color: #a855f7; }
+    }
+</style>
+</head>
+<body>
+
+<div id="stars"></div>
+<div id="stars2"></div>
+
+<svg width="132" height="76" viewBox="0 0 132 76">
+    <g transform="rotate(-18 40 38)">
+        <ellipse cx="40" cy="38" rx="32" ry="8" fill="none" stroke="#a855f7" stroke-width="2.4"
+                 clip-path="url(#ringBack)" opacity=".85"/>
+        <circle cx="40" cy="38" r="18" fill="#1a1a4a" stroke="#a855f7" stroke-width="2.4"/>
+        <circle cx="35" cy="33" r="3.5" fill="#2d2d6b"/>
+        <circle cx="46" cy="43" r="2.2" fill="#2d2d6b"/>
+        <ellipse cx="40" cy="38" rx="32" ry="8" fill="none" stroke="#c084fc" stroke-width="2.4"
+                 clip-path="url(#ringFront)"/>
+    </g>
+    <defs>
+        <clipPath id="ringBack"><rect x="0" y="0" width="80" height="38"/></clipPath>
+        <clipPath id="ringFront"><rect x="0" y="38" width="80" height="38"/></clipPath>
+    </defs>
+</svg>
+
+<h1>Astro<span class="accent">gram</span></h1>
+<p class="tagline">by AstroVoid24</p>
+
+<div id="LoginPage" class="card">
+    <h2>Welcome back</h2>
+    <p class="hint">Log in</p>
+
+    <label for="Username">Username</label>
+    <input type="text" id="Username" autocomplete="username" placeholder="Your Name">
+
+    <label for="Password">Password</label>
+    <div class="pw-wrap">
+        <input type="password" id="Password" autocomplete="current-password" placeholder="••••••••">
+        <button type="button" class="eye" data-for="Password" aria-label="Show password" title="Show password">
+            <svg class="look" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                 stroke-linecap="round" stroke-linejoin="round">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                <circle cx="12" cy="12" r="3"/>
+            </svg>
+            <svg class="shut" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                 stroke-linecap="round" stroke-linejoin="round">
+                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                <line x1="1" y1="1" x2="23" y2="23"/>
+            </svg>
+        </button>
+    </div>
+
+    <!-- no for= : the input is inside, and having both makes the click toggle
+         twice, so the box never appears to change -->
+    <label class="remember">
+        <input type="checkbox" id="RememberMe" checked>
+        Keep me logged in
+    </label>
+
+    <button id="Login" class="primary">Log in</button>
+    <button id="NoAccount" class="secondary">I don't have an account</button>
+</div>
+
+<div id="SignUpPage" class="card">
+    <h2>Sign up</h2>
+    <p class="hint">Pick a username and a password.</p>
+
+    <label for="AccountEmail">Your Mail: </label>
+    <input type="text" id="AccountEmail" autocomplete="email" placeholder="MyBestEmail@CoolMail.com">
+
+    <label for="NewUsername">Create a Username</label>
+    <input type="text" id="NewUsername" autocomplete="nickname" placeholder="Choose a name">
+
+    <label for="NewPassword">Create a Password</label>
+    <div class="pw-wrap">
+        <input type="password" id="NewPassword" autocomplete="new-password" placeholder="••••••••">
+        <button type="button" class="eye" data-for="NewPassword" aria-label="Show password" title="Show password">
+            <svg class="look" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                 stroke-linecap="round" stroke-linejoin="round">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                <circle cx="12" cy="12" r="3"/>
+            </svg>
+            <svg class="shut" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                 stroke-linecap="round" stroke-linejoin="round">
+                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                <line x1="1" y1="1" x2="23" y2="23"/>
+            </svg>
+        </button>
+    </div>
+
+    <button id="SignUp" class="primary">Sign Up</button>
+    <button id="HaveAccount" class="secondary">I have an account</button>
+</div>
+
+<script>
+    //| ====== STARFIELD (decoration only) ====== |\\
+    (function () {
+        function fill(id, count, maxSize) {
+            const batch = document.createDocumentFragment();
+            for (let i = 0; i < count; i++) {
+                const star = document.createElement("div");
+                const size = (Math.random() * maxSize + 0.6).toFixed(1) + "px";
+                star.className = "star";
+                star.style.left = (Math.random() * 100).toFixed(2) + "%";
+                star.style.top = (Math.random() * 160).toFixed(2) + "%";
+                star.style.width = size;
+                star.style.height = size;
+                star.style.animationDelay = (Math.random() * 4).toFixed(2) + "s";
+                batch.appendChild(star);
+            }
+            document.getElementById(id).appendChild(batch);
+        }
+        // Half as many on a phone — a small screen does not need 190 animated
+        // elements, and older phones stutter with them.
+        const small = window.innerWidth < 480;
+        fill("stars", small ? 60 : 130, 1.7);
+        fill("stars2", small ? 30 : 60, 2.6);
+    })();
+
+    //| ======== REMEMBERING THE ACCOUNT ======== |\\
+    const USER_KEY = "astrogram-user";
+    const INDEX_KEY = "astrogram-index";     // where they sit in Users on the server
+
+    function currentUser() {
+        return localStorage.getItem(USER_KEY) || sessionStorage.getItem(USER_KEY);
+    }
+
+    // Why they were banned. Nobody is ever told who reported them - when the
+    // commonest reason was "other" the typed-in reasons are listed instead.
+    function BanText(answer) {
+        const why = answer && answer.reason
+        let out = "This account has been banned."
+        if (why && why.top) {
+            if (why.top === "other" && (why.others || []).length) {
+                out += "<br><br><b>Reported for:</b><ul class='ban-reasons'>" +
+                       why.others.map(r => "<li>" + r + "</li>").join("") +
+                       "</ul>"
+            } else {
+                out += "<br><br><b>Reported for:</b> " + why.top
+            }
+            out += "<br><small>" + why.count + " reports</small>"
+        }
+        return out + "<br><br>Talk to AstroVoid24 if you think that is a mistake."
+    }
+
+    // They subscribed to the admin. They were told.
+    if (localStorage.getItem("astrogram-doomed")) {
+        localStorage.removeItem("astrogram-doomed");
+        setTimeout(function () {
+            OpenPopup("&#128128;", "You got banned becuz the admin wanted so",
+                "you actually did it?<br><br>HAHAHAAHAHHAHA", "bad");
+        }, 400);
+    }
+
+    // The server cannot see localStorage, so a cookie is what tells it somebody
+    // is signed in and lets "/" redirect on its own.
+    function SetSignedInCookie(on) {
+        document.cookie = on
+            ? "astrogram-in=1; path=/; max-age=" + (60 * 60 * 24 * 365) + "; SameSite=Lax"
+            : "astrogram-in=; path=/; max-age=0";
+    }
+
+    function rememberUser(name, index) {
+        const keep = $("#RememberMe").is(":checked");
+        const store = keep ? localStorage : sessionStorage;
+        const other = keep ? sessionStorage : localStorage;
+
+        store.setItem(USER_KEY, name);
+        store.setItem(INDEX_KEY, index);
+        SetSignedInCookie(true);
+        // clear the other one, so the two can never disagree about who is here
+        other.removeItem(USER_KEY);
+        other.removeItem(INDEX_KEY);
+    }
+
+    //| ======== SERVER ======== |\\
+    let link = "/api"
+
+    // Landing here at all means the "/" route did not redirect, so there is no
+    // cookie. If the browser still has a name saved the two disagree, so put the
+    // cookie back and let the route do the redirecting.
+    if (currentUser()) {
+        SetSignedInCookie(true);
+        window.location.replace("/");
+    }
+
+    //| ==== SHOW / HIDE PASSWORD ==== |\\
+    $("body").on("click", ".eye", function () {
+        const input = document.getElementById($(this).data("for"));
+        const hidden = input.type === "password";
+
+        // Switching type wipes the cursor position in some browsers, so put it back
+        const at = input.selectionStart;
+        input.type = hidden ? "text" : "password";
+        input.focus();
+        try { input.setSelectionRange(at, at); } catch (e) { /* number-ish inputs refuse this */ }
+
+        $(this).toggleClass("open", hidden)
+               .attr({ "aria-label": hidden ? "Hide password" : "Show password",
+                       title:        hidden ? "Hide password" : "Show password" });
+    });
+
+    //| === PAGE SWITCHING === |\\
+    let pages = {
+        Login: {index: 0, display: 'block'},
+        SignUp: {index: 1, display: 'none'},
+    }
+    function PageUpdate(index) {
+        const names = Object.keys(pages);
+        for (let i = 0; i < names.length; i++) {
+            const page = pages[names[i]];
+            page.display = page.index === index ? 'block' : 'none';
+            $(`#${names[i]}Page`).css('display', page.display);
+        }
+    }
+    //| ==== Sign Up / Log in ==== |\\
+    $("#HaveAccount").on("click", function (){PageUpdate(0)})
+    $("#NoAccount").on("click", function (){PageUpdate(1)})
+
+    $("#Login").on("click", async function (){
+        const name = $("#Username").val().trim();
+        const pass = $("#Password").val();
+
+        if (!name || !pass) {
+            OpenPopup("&#9888;", "Hold on", "Fill in both the username and the password.", "warn");
+            return;
+        }
+
+        $("#Login").prop("disabled", true).text("Checking...");
+
+        try {
+            const response = await fetch(link + "/logging-in", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ name: name, pass: pass })
+            });
+
+            // The server says which outcome it was through the status code
+            if (response.status === 200) {
+                // /logging-in answers with { index } — where this account sits
+                // in the server's Users array.
+                const who = await response.json();
+                pendingIndex = who.index;
+
+                // Admin accounts have no email on file, so there is no code to
+                // send. Straight to the panel instead.
+                if (who.admin) {
+                    rememberUser(name, who.index);
+                    window.location.replace("admin-panel.html");
+                    return;
+                }
+
+                // EMAIL_ON is false on the server, so there is no code coming.
+                // The username and password were already checked above.
+                if (!who.verify) {
+                    rememberUser(name, who.index);
+                    window.location.replace("/proceedToApp");
+                    return;
+                }
+
+                try {
+                    const response = await fetch(link + "/login-verify", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ name: name })
+                    });
+
+                    // The server says which outcome it was through the status code
+                    if (response.status === 200) {
+                        // No address was typed while logging in, so send the
+                        // username instead and let the server find the email.
+                        verifyTarget = { name: name }
+                        pendingUser = name
+                        OpenPopup("✉️", "Verify your mail", "", '',
+                            "<h4>A verification code was sent to your email</h4>" +
+                            "<label for='CodeVerify'>Code:</label><input id='CodeVerify'>" +
+                            "<button id='VerifyTheCodeButton'>Proceed</button>")
+                    }
+                    else if (response.status === 203) {
+                        OpenPopup("&#128683;", `The Username ${name} already exists`);
+                    }
+                    console.log(response);
+                } catch (error) {
+                    OpenPopup("&#128246;", "Cannot reach Astrogram",
+                        "The server is not answering.<br>Is it running?  <b>bun --watch Astrogram-Server.js</b>", "bad");
+                }
+            }
+            else if (response.status === 203) {
+                OpenPopup("&#128683;", "You are banned",
+                    BanText(await response.json().catch(() => ({}))), "bad");
+            }
+            else if (response.status === 401) {
+                OpenPopup("&#128274;", "Wrong details",
+                    "No account matches that username and password.", "bad");
+            }
+            else {
+                OpenPopup("&#10068;", "Something went wrong",
+                    "The server answered with status " + response.status + ".", "bad");
+            }
+            console.log(response);
+        } catch (error) {
+            OpenPopup("&#128246;", "Cannot reach Astrogram",
+                "The server is not answering.<br>Is it running?  <b>bun --watch Astrogram-Server.js</b>", "bad");
+        }
+
+        $("#Login").prop("disabled", false).text("Log in");
+    })
+
+    // Enter key in either box logs in
+    $("#Username, #Password").on("keydown", function (event) {
+        if (event.key === "Enter") $("#Login").trigger("click");
+    })
+    // What the code pop-up is currently checking.
+    //   signing up -> { mail }  the address they just typed
+    //   logging in -> { name }  no address was typed, so the server looks it up
+    let verifyTarget = {}
+    let pendingUser = ""      // whose account the code pop-up belongs to
+    let pendingIndex = -1     // their position in Users on the server
+
+    $("#SignUp").on("click", async function (){
+        const name = $("#NewUsername").val().trim();
+        const pass = $("#NewPassword").val();
+        const mail = $("#AccountEmail").val().trim();
+
+        if (!name || !pass || !mail) {
+            OpenPopup("&#9888;", "Hold on", "Fill in both the username, password and", "warn");
+            return;
+        }
+
+        try {
+            const response = await fetch(link + "/sign-up", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ name: name, pass: pass , mail:  mail})
+            });
+
+            // The server says which outcome it was through the status code
+            if (response.status === 200) {
+                const answer = await response.json().catch(() => ({}));
+                // With the mail switched off the server already made the account
+                if (answer.verify === false) {
+                    rememberUser(name, answer.index);
+                    OpenPopup("✅", "Welcome to Astrogram!", "", '',
+                        `<button id="ProceedToApp">Proceed to the app</button>`)
+                    return;
+                }
+                verifyTarget = { mail: mail }      // the address they typed
+                pendingUser = name
+                OpenPopup("✉️", "Verify your mail", "", '',
+                "<h4>A verification code was sent to " + mail + "</h4>" +
+                    "<label for='CodeVerify'>Code:</label><input id='CodeVerify'>" +
+                    "<button id='SignUpVerifyTheCodeButton'>Proceed</button>")
+            }
+            else if (response.status === 203) {
+                OpenPopup("&#128683;", `The Username ${name} already exists`);
+            }
+            else if (response.status === 205 || response.status === 204) {
+                // the server says exactly what is wrong with it
+                OpenPopup("&#9888;", "Pick another username", await response.text(), "warn");
+            }
+            console.log(response);
+        } catch (error) {
+            OpenPopup("&#128246;", "Cannot reach Astrogram",
+                "The server is not answering.<br>Is it running?  <b>bun --watch Astrogram-Server.js</b>", "bad");
+        }
+    })
+    $("body").on("click", "#VerifyTheCodeButton", async function (){
+        try {
+            const response = await fetch(link + "/verify-email", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ ...verifyTarget, code: $("#CodeVerify").val().trim() })
+            });
+
+            // The server says which outcome it was through the status code
+            if (response.status === 200) {
+                // The code checked out — this is the moment they are really in.
+                // /verify-email answers with { index } too, so use that if it came.
+                const answer = await response.json().catch(() => ({}));
+                rememberUser(pendingUser, answer.index ?? pendingIndex);
+                OpenPopup("✅", "You successfully entered your Astrogram Account!", "", '',
+                `<button id="ProceedToApp">Proceed to the app</button>`
+                )
+            }
+            else if (response.status === 201) {
+                OpenPopup("&#128683;", `The Code was incorrect`, '', '',
+                    "<label for='CodeVerify'>Code:</label><input id='CodeVerify'>" +
+                    "<button id='VerifyTheCodeButton'>Proceed</button>");
+            }
+            console.log(response);
+        } catch (error) {
+            OpenPopup("&#128246;", "Cannot reach Astrogram",
+                "The server is not answering.<br>Is it running?  <b>bun --watch Astrogram-Server.js</b>", "bad");
+        }
+    })
+    // fetch() would only download the page into a variable. Navigating is what
+    // actually moves the browser there.
+    $("body").on("click", "#ProceedToApp", function (){
+        window.location.replace("/proceedToApp");
+    })
+    $("body").on("click", "#SignUpVerifyTheCodeButton", async function (){
+        try {
+            const response = await fetch(link + "/verify-email", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ ...verifyTarget, code: $("#CodeVerify").val().trim() })
+            });
+
+            // The server says which outcome it was through the status code
+            if (response.status === 200) {
+                // The code checked out — this is the moment they are really in.
+                // /verify-email answers with { index } too, so use that if it came.
+                const answer = await response.json().catch(() => ({}));
+                rememberUser(pendingUser, answer.index ?? pendingIndex);
+                OpenPopup("✅", "You successfully created your Astrogram Account!", "", '',
+                    `<button id="ProceedToApp">Proceed to the app</button>`
+                )
+            }
+            else if (response.status === 201) {
+                OpenPopup("&#128683;", `The Code was incorrect`, '', '',
+                    "<label for='CodeVerify'>Code:</label><input id='CodeVerify'>" +
+                    "<button id='VerifyTheCodeButton'>Proceed</button>");
+            }
+            console.log(response);
+        } catch (error) {
+            OpenPopup("&#128246;", "Cannot reach Astrogram",
+                "The server is not answering.<br>Is it running?  <b>bun --watch Astrogram-Server.js</b>", "bad");
+        }
+    })
+    //| ======== POPUP ======== |\\
+    function OpenPopup(icon, title, text, kind, html) {
+        ClosePopup();
+        $("body").append(
+            "<div id='PopupOverlay'>" +
+                "<div id='PopupBox' class='" + (kind || "") + "'>" +
+                    "<button id='PopupClose'>&times;</button>" +
+                    "<div id='PopupIcon'>" + icon + "</div>" +
+                    "<h3 id='PopupTitle'>" + title + "</h3>" +
+                    "<p id='PopupText'>" + (text || "") + "</p>" +
+                    (html || "") +
+                "</div>" +
+            "</div>"
+        );
+    }
+    function ClosePopup() { $("#PopupOverlay").remove() }
+
+    $("body").on("click", "#PopupClose", ClosePopup);
+    $("body").on("click", "#PopupOverlay", function (event) {
+        if (event.target.id === "PopupOverlay") ClosePopup();
+    });
+</script>
+</body>
+</html>

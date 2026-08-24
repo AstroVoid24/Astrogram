@@ -1,0 +1,2349 @@
+/* ===== COSMIC BACKGROUND ===== */
+*,*::before,*::after {
+    box-sizing: border-box;
+}
+/* Phones wait 300ms before a click in case it becomes a double tap, and paint
+   a grey box over whatever was touched. Neither is wanted. */
+button, a, input, textarea, select, .PageButton, .chat-row, .person-row,
+.feed-post, .account-card, .post-row, .image-slot img {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+}
+
+
+/* min-height, not height. At height:100% the body is exactly one screen tall
+   while the content spills out of it - and a sticky child can only stay stuck
+   inside its parent's box, so the top bar came unstuck after one screenful. */
+html, body { min-height: 100%; }
+
+
+html { -webkit-text-size-adjust: 100%; }
+
+
+body {
+    margin: 0;
+    background: #05051f;
+    color: #e0e0ff;
+    font-family: Arial, Helvetica, sans-serif;
+    min-height: 100vh;
+    min-height: 100dvh;
+    /* NO overflow-x here. It makes the body a scroll container, and that quietly
+       breaks position: sticky on the top bar - it would scroll away and not come
+       back until you scrolled to the top. The stars are clipped at their own
+       element instead, which is what was overflowing. */
+}
+
+
+body::before {
+    content: "";
+    position: fixed; top: 0; right: 0; bottom: 0; left: 0; z-index: -2;
+    background:
+        radial-gradient(ellipse 70% 50% at 50% 0%,  rgba(88, 28, 135, .35), transparent 70%),
+        radial-gradient(ellipse 60% 50% at 15% 85%, rgba(30, 64, 175, .22), transparent 70%),
+        radial-gradient(ellipse 50% 40% at 85% 75%, rgba(168, 85, 247, .16), transparent 70%),
+        #05051f;
+}
+
+
+#stars, #stars2 {
+    position: fixed; top: 0; right: 0; bottom: 0; left: 0;
+    z-index: -1; pointer-events: none;
+    overflow: hidden;      /* the stars reach top:160%, keep them inside */
+}
+
+
+#stars  { animation: drift 220s linear infinite; }
+
+
+#stars2 { animation: drift 140s linear infinite reverse; opacity: .6; }
+
+
+@keyframes drift { from { transform: translateY(0); } to { transform: translateY(-800px); } }
+
+
+.star {
+    position: absolute; border-radius: 50%; background: #fff;
+    animation: twinkle 4s ease-in-out infinite;
+}
+
+
+@keyframes twinkle { 0%,100% { opacity: .25; } 50% { opacity: 1; } }
+
+
+
+/* ===== TOP BAR ===== */
+#TopBar {
+    position: sticky; top: 0; z-index: 500;
+    display: flex; align-items: center; gap: 14px;
+    /* min-height, not height. It wraps, and a fixed height cannot grow for the
+       second line - the buttons hung outside the bar and the glow on the
+       selected one was cut off by the edge. */
+    min-height: 62px; padding: 9px 16px;
+    flex-wrap: wrap;
+    background: rgba(10, 10, 40, .82);
+    border-bottom: 1px solid #2d2d55;
+    backdrop-filter: blur(10px);
+}
+
+
+#TopBar .brand {
+    display: flex; align-items: center; gap: 9px;
+    font-size: 21px; font-weight: 800; letter-spacing: 1px;
+    text-shadow: 0 0 18px rgba(168,85,247,.5);
+    margin-right: auto;
+}
+
+
+#TopBar .brand .accent { color: #a855f7; }
+
+
+.PageButton {
+    padding: 9px 17px;
+    font-size: 13px; font-weight: 700; letter-spacing: 1px;
+    background: transparent; color: #9aa0c0;
+    border: 1px solid transparent; border-radius: 9px; cursor: pointer;
+    transition: color .2s, background .2s, border-color .2s;
+}
+
+
+.PageButton.active {
+    color: #fff;
+    background: rgba(168, 85, 247, .22);
+    border-color: #a855f7;
+    box-shadow: 0 0 14px rgba(168,85,247,.45);
+}
+
+
+
+/* ===== PAGES ===== */
+#Main { max-width: 640px; margin: 0 auto; padding: 18px 16px 60px; }
+
+
+.Page { display: none; }
+
+
+.Page.on { display: block; animation: rise .3s ease-out; }
+
+/* sliding between pages with a swipe */
+.Page.out-left  { animation: slide-out-left .13s ease-in forwards; }
+.Page.out-right { animation: slide-out-right .13s ease-in forwards; }
+.Page.on.in-right { animation: slide-in-right .22s ease-out; }
+.Page.on.in-left  { animation: slide-in-left .22s ease-out; }
+@keyframes slide-out-left  { to { opacity: 0; transform: translateX(-26px); } }
+@keyframes slide-out-right { to { opacity: 0; transform: translateX(26px); } }
+@keyframes slide-in-right  { from { opacity: 0; transform: translateX(30px); } to { opacity: 1; transform: none; } }
+@keyframes slide-in-left   { from { opacity: 0; transform: translateX(-30px); } to { opacity: 1; transform: none; } }
+
+
+@keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+
+
+
+.PageTitle { margin: 0 0 4px; font-size: 25px; font-weight: 800; }
+
+
+.PageHint  { margin: 0 0 22px; font-size: 13px; color: #8b8bb8; }
+
+
+
+/* ===== CARD — the building block for everything ===== */
+.card {
+    background: linear-gradient(145deg, rgba(10,10,46,.92), rgba(26,26,74,.92));
+    border: 1px solid #4b0082;
+    border-radius: 14px;
+    padding: 20px 22px;
+    margin-bottom: 14px;
+    box-shadow: 0 0 22px rgba(138,43,226,.25), 0 8px 26px rgba(0,0,0,.55);
+}
+
+
+.card h3 { margin: 0 0 8px; font-size: 16px; color: #e0e0ff; }
+
+
+.card p  { margin: 0; font-size: 14px; color: #9aa0c0; line-height: 1.6; }
+
+
+
+/* an empty slot, so you can see where things will go */
+.placeholder {
+    border: 1px dashed #3a3a68;
+    border-radius: 14px;
+    padding: 34px 20px;
+    text-align: center;
+    color: #55557a;
+    font-size: 13px;
+    background: rgba(10,10,46,.4);
+}
+
+
+
+/* ===== PROFILE PICTURE ===== */
+/* The div is the round window; the image inside is cropped to fit it.
+   Rounding the <img> itself squashes a non-square photo into an oval. */
+.avatar {
+    position: relative;             /* so the edit button can sit on top of it */
+    width: 150px; height: 150px;
+    border-radius: 50%;
+    overflow: hidden;               /* this is what does the cropping */
+    border: 3px solid #a855f7;
+    box-shadow: 0 0 26px rgba(168,85,247,.5);
+    background: #14123a;            /* shows while the picture loads */
+    flex: none;                     /* stops it squashing in a flex row */
+}
+
+
+/* while the profile is being edited the picture is a button */
+.avatar.editing { cursor: pointer; }
+
+
+.avatar.editing img { transition: filter .2s; }
+
+
+
+#ChangePicture {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    background: transparent; border: none;
+    color: #e0e0ff; cursor: pointer;
+    opacity: 0;                     /* only shows on hover */
+    transition: opacity .2s;
+}
+
+
+#ChangePicture svg { width: 38px; height: 38px; filter: drop-shadow(0 2px 6px rgba(0,0,0,.6)); }
+
+
+#ChangePicture:active svg { transform: scale(.9); }
+
+
+
+/* while the new picture is on its way up */
+.avatar.uploading img { filter: grayscale(1) brightness(.4); }
+
+
+.avatar.uploading::after {
+    content: ""; position: absolute; inset: 0; margin: auto;
+    width: 34px; height: 34px;
+    border: 3px solid rgba(168,85,247,.3); border-top-color: #a855f7;
+    border-radius: 50%;
+    animation: spin .8s linear infinite;
+}
+
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+
+
+.avatar img {
+    width: 100%; height: 100%;
+    object-fit: cover;              /* fill the circle, crop the overflow */
+    display: block;                 /* kills the gap under an inline image */
+}
+
+
+/* small version, for posts and chat rows later */
+.avatar.small { width: 44px; height: 44px; border-width: 2px; box-shadow: none; }
+
+
+
+/* ===== PROFILE — Telegram-style ===== */
+/* A header block with the picture and name, then groups of rows. Each
+   row shows the value on top and what it is underneath in small grey. */
+
+.profile-header {
+    position: relative;              /* so the copy button can sit in the corner */
+    display: flex; flex-direction: column; align-items: center;
+    text-align: center;
+    padding: 34px 22px 28px;
+    margin-bottom: 16px;
+}
+
+
+
+/* ===== COPY ACCOUNT LINK ===== */
+#CopyAccLink {
+    position: absolute; top: 12px; right: 12px;
+    padding: 7px 13px;
+    font-size: 11px; font-weight: 700;
+    letter-spacing: .8px; text-transform: uppercase;
+    font-family: inherit;
+    color: #9aa0c0;
+    background: rgba(20,18,58,.7);
+    border: 1px solid #2d2d55;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: color .2s, border-color .2s, background .2s;
+}
+
+
+#CopyAccLink:active { transform: scale(.97); }
+
+
+/* The banned banner sits across the top of the card, so the button has
+   to drop below it instead of landing on top. */
+.profile-header.banned #CopyAccLink { top: 52px; }
+
+
+
+/* ===== A BANNED ACCOUNT ===== */
+.profile-header.banned .avatar {
+    border-color: #f87171;
+    box-shadow: 0 0 24px rgba(248,113,113,.4);
+    filter: grayscale(1); opacity: .75;
+}
+
+
+.profile-header.banned .profile-name { color: #f87171; }
+
+
+.banned-banner {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    width: 100%; margin: -34px -22px 22px;
+    padding: 11px 22px;
+    width: calc(100% + 44px);        /* back out to the card's edges */
+    background: rgba(248,113,113,.14);
+    border-bottom: 1px solid #7f1d1d;
+    font-size: 12px; font-weight: 700;
+    letter-spacing: 1.5px; text-transform: uppercase;
+    color: #f87171;
+}
+
+
+.profile-header .avatar { width: 130px; height: 130px; margin-bottom: 16px; }
+
+
+.profile-name {
+    margin: 0 0 5px;
+    font-size: 24px; font-weight: 700; color: #fff;
+}
+
+
+.sub-count {
+    margin-top: 7px;
+    font-size: 13px; color: #8b8bb8; letter-spacing: .3px;
+}
+
+
+.sub-count b { color: #c4b5fd; font-size: 15px; font-weight: 800; }
+
+
+/* the counts are buttons now, styled to look like the text they replaced */
+.sub-count button {
+    padding: 3px 8px;
+    font-family: inherit; font-size: 13px; color: inherit;
+    background: transparent; border: none; border-radius: 8px;
+    cursor: pointer;
+    transition: background .15s, color .15s;
+}
+
+
+.sub-dot { color: #4b0082; }
+
+
+
+/* the two buttons under the name, side by side */
+.account-actions {
+    display: flex; align-items: center; justify-content: center;
+    gap: 9px; flex-wrap: wrap;
+}
+
+
+
+/* Message. Outlined, so the filled Subscribe stays the main one. */
+.message-btn {
+    display: inline-flex; align-items: center; gap: 7px;
+    margin-top: 14px; padding: 10px 24px;
+    font-family: inherit; font-size: 14px; font-weight: 800;
+    letter-spacing: 1.2px; text-transform: uppercase;
+    color: #c4b5fd;
+    background: transparent;
+    border: 1px solid #4b0082;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: color .18s, border-color .18s, background .18s, box-shadow .25s, transform .15s;
+}
+
+
+.message-btn svg { width: 15px; height: 15px; flex: none; }
+
+
+.message-btn:active { transform: translateY(0) scale(.97); }
+
+
+.profile-header.banned .message-btn { border-color: #7f1d1d; color: #fca5a5; }
+
+
+
+.subscribe-btn {
+    margin-top: 14px;
+    padding: 10px 34px;
+    font-family: inherit; font-size: 14px; font-weight: 800;
+    letter-spacing: 1.2px; text-transform: uppercase;
+    color: #fff;
+    background: linear-gradient(135deg, #7c3aed, #4c1d95);
+    border: 1px solid #a855f7;
+    border-radius: 999px;
+    cursor: pointer;
+    box-shadow: 0 0 18px rgba(168,85,247,.4);
+    transition: transform .15s, box-shadow .25s, background .2s;
+}
+
+
+.subscribe-btn:active { transform: translateY(0) scale(.97); }
+
+
+/* while the request is in the air */
+.subscribe-btn:disabled { opacity: .55; cursor: default; transform: none; }
+
+
+
+/* already subscribed: hollow, so the filled one always means "press me" */
+.subscribe-btn.on {
+    background: transparent; color: #c4b5fd;
+    border-color: #4b0082; box-shadow: none;
+}
+
+
+
+.its-you.banned-note { color: #f87171; border-color: #7f1d1d; border-style: solid; }
+
+
+
+/* your own account, where a button makes no sense */
+.its-you {
+    margin-top: 14px;
+    padding: 9px 26px;
+    display: inline-block;
+    font-size: 12px; font-weight: 700;
+    letter-spacing: 1.2px; text-transform: uppercase;
+    color: #7a7a9e;
+    border: 1px dashed #4b0082;
+    border-radius: 999px;
+}
+
+
+/* a banned account keeps the red theme */
+.profile-header.banned .subscribe-btn {
+    background: linear-gradient(135deg, #b91c1c, #7f1d1d); border-color: #f87171;
+    box-shadow: 0 0 18px rgba(248,113,113,.35);
+}
+
+
+.profile-header.banned .sub-count b { color: #fca5a5; }
+
+
+
+.profile-status { margin: 0; font-size: 13px; color: #4ade80; }
+
+
+.profile-status.off { color: #6b7280; }
+
+
+
+/* a group of rows sharing one rounded box */
+.info-group {
+    background: linear-gradient(145deg, rgba(10,10,46,.92), rgba(26,26,74,.92));
+    border: 1px solid #4b0082;
+    border-radius: 14px;
+    box-shadow: 0 0 22px rgba(138,43,226,.25), 0 8px 26px rgba(0,0,0,.55);
+    overflow: hidden;              /* keeps row hovers inside the corners */
+    margin-bottom: 16px;
+}
+
+
+.info-group .title {
+    padding: 15px 20px 8px;
+    font-size: 12px; font-weight: 700;
+    letter-spacing: 1.5px; text-transform: uppercase; color: #a855f7;
+}
+
+
+
+.info-row {
+    display: flex; align-items: center; gap: 16px;
+    padding: 14px 20px;
+    cursor: pointer;
+    transition: background .15s;
+}
+
+
+/* a hairline between rows, but not under the last one */
+.info-row + .info-row { border-top: 1px solid rgba(75,0,130,.45); }
+
+
+
+/* While the bio is being edited the row can get tall, so the icon sits
+   at the top instead of floating in the middle, and the hover highlight
+   is switched off so it does not flash while typing. */
+.info-row.editing { align-items: flex-start; cursor: default; }
+
+
+.info-row.editing .info-icon { padding-top: 11px; }
+
+
+.info-row.editing .info-label { margin-top: 6px; }
+
+
+
+.info-icon {
+    width: 22px; flex: none;
+    font-size: 17px; text-align: center; color: #a855f7;
+}
+
+
+/* flex:1 makes it claim the whole rest of the row, so anything inside
+   can be width:100%. min-width:0 lets it shrink instead of forcing the
+   row wider when the text is long. */
+.info-text { flex: 1; min-width: 0; }
+
+
+.info-value {
+    font-size: 15px; color: #e0e0ff; line-height: 1.4;
+    overflow-wrap: anywhere;
+}
+
+
+.info-value.empty { color: #55557a; font-style: italic; }
+
+
+.info-label { font-size: 12px; color: #7a7a9e; margin-top: 2px; }
+
+
+
+/* a settings row: icon, two lines of text, a chevron */
+.action-row .row-text { flex: 1; min-width: 0; text-align: left; }
+.action-row .row-name { display: block; font-size: 15px; color: #c4b5fd; }
+.action-row .row-sub  { display: block; font-size: 12px; color: #7a7a9e; margin-top: 2px;
+                        overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.action-row .row-arrow { flex: none; font-size: 20px; color: #4b0082; }
+
+/* back to Settings, at the top of the profile */
+.back-row {
+    display: inline-flex; align-items: center; gap: 8px;
+    margin-bottom: 14px; padding: 8px 14px 8px 10px;
+    font-family: inherit; font-size: 13px; font-weight: 700;
+    color: #8b8bb8; background: transparent;
+    border: 1px solid #34246b; border-radius: 999px; cursor: pointer;
+    transition: color .16s, border-color .16s;
+}
+
+/* the three languages */
+.lang-pick {
+    display: block; width: 100%; margin-top: 8px; padding: 13px;
+    font-family: inherit; font-size: 15px; font-weight: 700;
+    color: #c4b5fd; background: rgba(10,10,46,.6);
+    border: 1px solid #34246b; border-radius: 10px; cursor: pointer;
+    transition: all .16s;
+}
+.lang-pick.on {
+    color: #fff; border-color: #a855f7;
+    background: linear-gradient(135deg, #7c3aed, #4c1d95);
+}
+
+/* rows that do something rather than show something */
+.action-row {
+    display: flex; align-items: center; gap: 16px;
+    width: 100%; padding: 15px 20px;
+    background: transparent; border: none;
+    font-size: 15px; color: #c4b5fd; text-align: left;
+    font-family: inherit; cursor: pointer;
+    transition: background .15s;
+}
+
+
+.action-row + .action-row { border-top: 1px solid rgba(75,0,130,.45); }
+
+
+.action-row.danger { color: #f87171; }
+
+
+
+/* the little turning ring every "Loading..." uses */
+.spin {
+    display: inline-block; vertical-align: -3px;
+    width: 15px; height: 15px; margin-right: 9px;
+    border: 2px solid rgba(168,85,247,.28);
+    border-top-color: #a855f7;
+    border-radius: 50%;
+    animation: spin .7s linear infinite;
+}
+.search-empty .spin, .chat-empty .spin { margin-right: 10px; }
+
+/* ===== PULL DOWN TO RELOAD ===== */
+/* the browser's own pull-to-refresh would fire at the same time */
+html, body { overscroll-behavior-y: contain; }
+
+#Pull {
+    height: 0; overflow: hidden;
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    font-size: 12px; letter-spacing: 1px; text-transform: uppercase;
+    color: #7a7a9e;
+    transition: height .2s ease-out;
+}
+#Pull .pull-ring {
+    width: 16px; height: 16px;
+    border: 2px solid rgba(168,85,247,.3);
+    border-top-color: #a855f7;
+    border-radius: 50%;
+    transition: transform .2s;
+}
+/* far enough: it turns purple. The words are set in JS. */
+#Pull.ready { color: #c4b5fd; }
+#Pull.ready .pull-ring { transform: rotate(180deg); border-top-color: #c4b5fd; }
+
+/* let go: it stays open and spins until the fetch is done */
+#Pull.busy { height: 54px !important; color: #c4b5fd; }
+#Pull.busy .pull-ring { animation: spin .7s linear infinite; transform: none; }
+
+/* ===== ONE CONVERSATION ===== */
+/* the page fills the screen: header, then the messages taking the slack,
+   then the box you type in pinned to the bottom */
+/* Pinned from under the bar to the bottom of the screen. As a normal block it
+   sat inside the page, so the whole page scrolled and took the input box with
+   it - only the message list should ever move. */
+body.on-chat { overflow: hidden; }
+/* the pull strip sits above the bar, and the bar is measured for --barH, so it
+   must not add height while a conversation is pinned under it */
+body.on-chat #Pull { position: absolute; top: 0; left: 0; right: 0; z-index: 400; }
+#PageChat.on {
+    display: flex; flex-direction: column;
+    position: fixed;
+    top: var(--barH, 62px); left: 0; right: 0; bottom: 0;
+    width: 100%; max-width: 640px; margin: 0 auto;
+    padding: 14px 18px 12px;
+    animation: none;                 /* the rise animation would slide it about */
+}
+
+
+
+.chat-top {
+    display: flex; align-items: center; gap: 12px; flex: none;
+    padding: 0 0 14px; margin-bottom: 12px;
+    border-bottom: 1px solid #4b0082;
+}
+
+
+#ChatBack {
+    padding: 4px 10px;
+    font-size: 22px; line-height: 1; font-family: inherit;
+    color: #8b8bb8; background: transparent; border: none; cursor: pointer;
+    transition: color .15s, transform .15s;
+}
+
+
+.chat-top .avatar.small { width: 44px; height: 44px; }
+
+
+.chat-top-who { flex: 1; min-width: 0; }
+
+
+.chat-top-name {
+    font-size: 16px; font-weight: 700; color: #e0e0ff;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+
+.chat-top-sub { font-size: 12px; color: #7a7a9e; }
+
+
+
+#ChatMessages {
+    flex: 1; min-height: 0;              /* min-height, or flex refuses to scroll it */
+    overflow-y: auto;
+    display: flex; flex-direction: column; gap: 7px;
+    padding: 4px 2px 10px;
+}
+
+
+.chat-empty { margin: auto; color: #55557a; font-size: 14px; text-align: center; }
+
+
+
+.bubble {
+    position: relative;
+    max-width: 74%;
+    padding: 9px 13px 9px 13px;
+    font-size: 14.5px; line-height: 1.45;
+    border-radius: 15px;
+    overflow-wrap: anywhere; white-space: pre-wrap;
+    animation: bubble-up .18s ease-out both;
+}
+
+
+@keyframes bubble-up { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+
+/* mine on the right, theirs on the left - the squared corner points at the sender */
+.bubble.mine {
+    align-self: flex-end;
+    background: linear-gradient(135deg, #7c3aed, #4c1d95);
+    border: 1px solid #a855f7; border-bottom-right-radius: 5px;
+    color: #fff;
+}
+
+
+.bubble.theirs {
+    align-self: flex-start;
+    background: linear-gradient(145deg, rgba(26,26,74,.95), rgba(10,10,46,.95));
+    border: 1px solid #4b0082; border-bottom-left-radius: 5px;
+    color: #e0e0ff;
+}
+
+
+/* your own are tappable, to delete them */
+.bubble.mine { cursor: pointer; }
+.bubble.going { animation: bubble-gone .2s ease-in forwards; pointer-events: none; }
+@keyframes bubble-gone { to { opacity: 0; transform: scale(.9); } }
+
+.bubble-time {
+    display: block; margin-top: 3px;
+    font-size: 10px; text-align: right; opacity: .65;
+}
+
+
+
+.chat-send { display: flex; gap: 9px; flex: none; padding-top: 12px; border-top: 1px solid #4b0082; }
+
+
+#ChatInput {
+    flex: 1; min-width: 0;
+    padding: 12px 16px;
+    font-size: 15px; font-family: inherit;
+    background: #14123a; border: 1px solid #4b0082; border-radius: 999px;
+    color: #e0e0ff; outline: none;
+    transition: border-color .2s, box-shadow .2s;
+}
+
+
+#ChatInput:focus { border-color: #a855f7; box-shadow: 0 0 14px rgba(168,85,247,.35); }
+
+
+#ChatInput::placeholder { color: #55557a; }
+
+
+#ChatSend {
+    width: 46px; height: 46px; flex: none;
+    font-size: 17px; font-family: inherit;
+    color: #fff;
+    background: linear-gradient(135deg, #7c3aed, #4c1d95);
+    border: 1px solid #a855f7; border-radius: 50%;
+    cursor: pointer;
+    transition: transform .15s, box-shadow .25s;
+}
+
+
+#ChatSend:active { transform: scale(.94); }
+
+
+
+/* rows inside a pop-up list, same look as a chat row */
+.people-list { text-align: left; margin-top: 8px; }
+
+
+.people-list .person-row:last-child { margin-bottom: 0; }
+
+
+
+/* shown when the browser refuses to copy, so it can be done by hand */
+.copy-fallback {
+    width: 100%; margin-top: 6px; padding: 12px 14px;
+    font-size: 14px; font-family: inherit; text-align: center;
+    background: #14123a; border: 1px solid #a855f7; border-radius: 9px;
+    color: #e0e0ff; outline: none;
+}
+
+/* the language buttons on the profile */
+.lang-row { display: flex; gap: 8px; flex-wrap: wrap; padding: 4px 16px 16px; }
+.lang-pick {
+    flex: 1; min-width: 90px; padding: 11px 14px;
+    font-family: inherit; font-size: 13px; font-weight: 700;
+    color: #c4b5fd; background: rgba(10,10,46,.6);
+    border: 1px solid #34246b; border-radius: 10px; cursor: pointer;
+    transition: color .16s, border-color .16s, background .16s;
+}
+
+/* ===== THE CHAT LIST ===== */
+
+/* Standalone. It deliberately does NOT use .account-card - that is a fixed
+   150x150 column, which squashed the row and the avatar with it. */
+.chat-row, .person-row {
+    display: flex; align-items: center; gap: 13px;
+    width: 100%; padding: 11px 14px; margin-bottom: 8px;
+    text-align: left; font-family: inherit;
+    background: rgba(255,255,255,.05);
+    border: 1px solid #4b0082; border-radius: 12px;
+    color: #e0e0ff; cursor: pointer;
+    transition: background .2s, border-color .2s, box-shadow .2s;
+}
+
+
+/* its own size, so the 150px .avatar base cannot reach it */
+.chat-row .avatar, .person-row .avatar {
+    width: 48px; height: 48px; flex: none;
+    border-width: 2px; box-shadow: none;
+}
+
+
+.chat-row .chat-who, .person-row .chat-who { flex: 1; min-width: 0; }
+
+     /* min-width so long text shortens */
+.chat-row .name-row, .person-row .name-row {
+    display: flex; align-items: center; gap: 5px; justify-content: flex-start;
+}
+
+
+.chat-row .name, .person-row .name {
+    font-size: 15px; font-weight: 700;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+
+.chat-row .at, .person-row .at {
+    display: block; margin-top: 2px;
+    font-size: 12.5px; color: #7a7a9e;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+
+.chat-row .verified-tick, .person-row .verified-tick { width: 15px; height: 15px; }
+
+
+/* the last message reads brighter than a bio, it is the point of the row */
+.chat-row .at.has-chat, .person-row .at.has-chat { color: #b9b9dd; }
+
+
+
+.chat-row.banned, .person-row.banned { border-color: #7f1d1d; background: rgba(248,113,113,.07); }
+
+
+.chat-row.banned .name, .person-row.banned .name { color: #f87171; }
+
+
+.chat-row.banned .avatar, .person-row.banned .avatar { border-color: #f87171; filter: grayscale(1); opacity: .7; }
+
+
+.chat-row .banned-tag, .person-row .banned-tag { display: none; }
+
+
+.chat-row.banned .banned-tag, .person-row.banned .banned-tag {
+    display: inline-block; margin-left: 4px; padding: 1px 7px;
+    font-size: 9px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
+    color: #f87171; border: 1px solid #7f1d1d; border-radius: 999px;
+}
+
+
+.chat-row.is-verified, .person-row.is-verified { border-color: #1e4976; background: rgba(59,157,255,.06); }
+
+
+.chat-row.is-verified .avatar, .person-row.is-verified .avatar { border-color: #3b9dff; }
+
+
+
+/* ===== SEARCH ===== */
+/* the two filters, as pills that light up when they are on */
+.search-filters { display: flex; gap: 9px; margin: -12px 0 18px; }
+
+
+/* the real checkbox is still there and still keyboard reachable, just invisible */
+.search-filters input { position: absolute; opacity: 0; width: 0; height: 0; }
+
+
+.search-filters label {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 7px 16px;
+    font-size: 13px; font-weight: 700;
+    color: #8b8bb8;
+    background: rgba(10,10,46,.6);
+    border: 1px solid #34246b;
+    border-radius: 999px;
+    cursor: pointer;
+    user-select: none;
+    transition: color .18s, border-color .18s, background .18s, box-shadow .25s;
+}
+
+
+/* the tick, drawn in, so nothing shifts when it turns on */
+.search-filters label::before {
+    content: "\2713";
+    font-size: 11px;
+    opacity: .35;
+}
+
+
+
+.search-filters input:checked + label::before { opacity: 1; }
+
+
+#IsVerified:checked + label {
+    color: #fff; border-color: #3b9dff;
+    background: rgba(59,157,255,.18);
+    box-shadow: 0 0 15px rgba(59,157,255,.35);
+}
+
+
+#IsBanned:checked + label {
+    color: #fff; border-color: #f87171;
+    background: rgba(248,113,113,.16);
+    box-shadow: 0 0 15px rgba(248,113,113,.3);
+}
+
+
+/* tabbing to it has to be visible, the box itself cannot be seen */
+.search-filters input:focus-visible + label { outline: 2px solid #a855f7; outline-offset: 2px; }
+
+
+
+.search-wrap { position: relative; margin-bottom: 20px; }
+
+
+#SearchInput {
+    width: 100%;
+    padding: 14px 44px 14px 44px;   /* room for the icon and the clear button */
+    font-size: 16px; font-family: inherit;
+    background: linear-gradient(145deg, rgba(10,10,46,.92), rgba(26,26,74,.92));
+    border: 1px solid #4b0082;
+    border-radius: 12px;
+    color: #e0e0ff;
+    outline: none;
+    -webkit-appearance: none;
+    transition: border-color .2s, box-shadow .2s;
+}
+
+
+#SearchInput:focus { border-color: #a855f7; box-shadow: 0 0 16px rgba(168,85,247,.45); }
+
+
+#SearchInput::placeholder { color: #55557a; }
+
+
+
+.search-wrap .glass {
+    position: absolute; left: 15px; top: 50%; transform: translateY(-50%);
+    font-size: 16px; color: #7a7a9e; pointer-events: none;
+}
+
+
+#SearchClear {
+    position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+    width: 30px; height: 30px;
+    display: none;                  /* only while there is something typed */
+    align-items: center; justify-content: center;
+    background: transparent; border: none;
+    color: #6b7280; font-size: 20px; line-height: 1; cursor: pointer;
+}
+
+
+
+/* ===== SEARCH RESULTS — cards like the no-barcode grid ===== */
+.account-grid {
+    display: flex;
+    flex-wrap: wrap;                /* cards drop to the next row */
+    gap: 12px;
+    /* Without this the cards pack to the left, so a last row holding
+       one card sits under the leftmost one and the block looks
+       lopsided. Centring balances every row, full or not. */
+    justify-content: center;
+}
+
+
+/* the whole card is the button — clicking anywhere opens the account */
+.account-card {
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 9px;
+    width: 150px; height: 150px;
+    padding: 15px 10px;
+    background: rgba(255,255,255,.05);
+    border: 1px solid #4b0082;
+    border-radius: 12px;
+    color: #e0e0ff; font-family: inherit;
+    cursor: pointer;
+    transition: background .2s, border-color .2s, transform .15s, box-shadow .2s;
+}
+
+
+.account-card .avatar { width: 62px; height: 62px; border-width: 2px; box-shadow: none; }
+
+
+.account-card .name {
+    font-size: 13px; font-weight: 600; line-height: 1.3;
+    text-align: center; word-break: break-word;
+}
+
+
+.account-card .at { font-size: 11px; color: #7a7a9e; }
+
+
+
+/* ===== VERIFIED ===== */
+/* Blue instead of purple, and a checkmark beside the name. */
+.verified-tick {
+    display: none;                  /* only shown on verified accounts */
+    width: 18px; height: 18px;
+    flex: none; vertical-align: -3px;
+    color: #3b9dff;
+}
+
+
+.is-verified .verified-tick { display: inline-block; }
+
+
+
+.is-verified .avatar {
+    border-color: #3b9dff;
+    box-shadow: 0 0 26px rgba(59,157,255,.5);
+}
+
+
+.account-card.is-verified {
+    border-color: #1e4976;
+    background: rgba(59,157,255,.06);
+}
+
+
+.account-card.is-verified .avatar { box-shadow: none; }
+
+
+/* name and tick sit on one line together */
+.account-card .name-row {
+    display: flex; align-items: center; justify-content: center; gap: 4px;
+}
+
+
+.account-card .verified-tick { width: 14px; height: 14px; }
+
+
+.profile-name-row {
+    display: flex; align-items: center; justify-content: center; gap: 7px;
+    margin-bottom: 5px;
+}
+
+
+.profile-name-row .profile-name { margin: 0; }
+
+
+.profile-name-row .verified-tick { width: 21px; height: 21px; }
+
+
+
+/* a banned account, so it is obvious at a glance */
+.account-card.banned {
+    border-color: #7f1d1d;
+    background: rgba(248,113,113,.07);
+}
+
+
+.account-card.banned .name { color: #f87171; }
+
+
+.account-card.banned .avatar {
+    border-color: #f87171;
+    filter: grayscale(1);          /* drains the colour from the picture */
+    opacity: .7;
+}
+
+
+.account-card .banned-tag {
+    display: none;                 /* only on banned cards */
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 1px; text-transform: uppercase;
+    color: #f87171;
+    border: 1px solid #7f1d1d; border-radius: 5px;
+    padding: 1px 6px;
+}
+
+
+.account-card.banned .banned-tag { display: block; }
+
+
+.account-card.banned .at { display: none; }
+
+   /* the tag takes its place */
+
+.search-empty {
+    padding: 46px 20px; text-align: center;
+    color: #55557a; font-size: 13px;
+}
+
+
+.search-empty .big { display: block; font-size: 34px; margin-bottom: 10px; opacity: .5; }
+
+
+
+/* ===== POSTS BLOCK ===== */
+.post-count {
+    margin-left: auto;
+    font-size: 12px; font-weight: 700;
+    color: #7a7a9e; letter-spacing: 0;
+}
+
+
+.info-group .title.with-count { display: flex; align-items: center; }
+
+
+
+/* square thumbnails, three across, like a profile grid */
+.post-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 3px;
+    padding: 3px;
+    /* tall profiles get their own scrollbar instead of pushing the page
+       down forever — the rest of the page still scrolls normally */
+    max-height: 420px;
+    overflow-y: auto;
+}
+
+
+.post-tile {
+    position: relative;
+    aspect-ratio: 1;             /* always square, whatever the picture is */
+    background: #14123a;
+    border-radius: 4px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: opacity .15s;
+}
+
+
+.post-tile img {
+    width: 100%; height: 100%;
+    object-fit: cover; display: block;
+}
+
+
+/* posts with no picture still need to show something */
+.post-tile .text-only {
+    display: flex; align-items: center; justify-content: center;
+    width: 100%; height: 100%;
+    padding: 10px;
+    font-size: 12px; line-height: 1.4; color: #9aa0c0;
+    text-align: center; overflow: hidden;
+}
+
+
+
+/* ===== POST ROWS ===== */
+/* One line per post: a short piece of the text, then its tags. */
+.post-row {
+    display: flex; align-items: flex-start; gap: 14px;
+    padding: 13px 20px;
+    cursor: pointer;
+    transition: background .15s;
+}
+
+
+.post-row + .post-row { border-top: 1px solid rgba(75,0,130,.45); }
+
+
+.post-row .num {
+    flex: none; width: 22px;
+    font-size: 12px; font-weight: 700; color: #4b0082;
+    padding-top: 2px; text-align: center;
+}
+
+
+.post-row .body { min-width: 0; flex: 1; }
+
+
+.post-row .row-title {
+    font-size: 14px; font-weight: 700; color: #e0e0ff;
+    margin-bottom: 2px;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+
+.post-row .snippet {
+    font-size: 14px; color: #e0e0ff; line-height: 1.45;
+    overflow-wrap: anywhere;
+}
+
+
+.post-row .tags {
+    margin-top: 5px;
+    font-size: 11px; color: #7c3aed;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+
+/* the full text, used in the "all posts" pop-up */
+.post-row.full .snippet { white-space: pre-wrap; }
+
+
+.post-row.full .row-title { white-space: normal; font-size: 15px; }
+
+
+.post-row.full .tags { white-space: normal; }
+
+
+
+/* the row that opens the rest */
+.show-all-row {
+    display: block; width: 100%;
+    padding: 13px 20px;
+    background: transparent; border: none;
+    border-top: 1px solid rgba(75,0,130,.45);
+    font-family: inherit; font-size: 13px; font-weight: 700;
+    letter-spacing: .5px; color: #a855f7;
+    text-align: center; cursor: pointer;
+    transition: background .15s;
+}
+
+
+
+/* ===== WRITING A POST ===== */
+/* The form inside the pop-up the + button opens. */
+/* a picture on its own: no box around it at all, just the picture */
+#PopupBox.image-mode {
+    width: fit-content; height: auto;
+    max-width: calc(100vw - 28px); max-height: calc(100dvh - 28px);
+    padding: 0;
+    background: none;
+    border: none;
+    box-shadow: none;
+    overflow: visible;
+}
+
+
+/* the empty icon, title and text rows would still take up room */
+#PopupBox.image-mode #PopupIcon,
+#PopupBox.image-mode #PopupTitle,
+#PopupBox.image-mode #PopupText { display: none; }
+
+
+
+#PopupBox.image-mode #PopupBody { overflow: visible; display: flex; }
+#PopupBox.image-mode .image-viewer { height: auto; padding: 0; }
+
+
+#PopupBox.image-mode .image-viewer img {
+    max-width: calc(100vw - 28px);
+    max-height: calc(100dvh - 28px);
+    border: none;
+}
+
+
+
+/* on the corner of the picture, nothing behind it. The shadow is what keeps
+   it readable on a white photo. */
+#PopupBox.image-mode #PopupClose,
+#PopupBox.image-mode #PopupBack {
+    top: 6px; z-index: 2;
+    font-size: 26px; line-height: 1;
+    color: #fff;
+    background: none; border: none;
+    opacity: .85;
+    filter: drop-shadow(0 1px 3px rgba(0,0,0,.9)) drop-shadow(0 0 10px rgba(0,0,0,.6));
+    transition: opacity .15s, transform .15s;
+}
+
+
+#PopupBox.image-mode #PopupClose { right: 8px; }
+
+
+#PopupBox.image-mode #PopupBack  { left: 8px; }
+
+
+
+#imageAttachToPost {
+    width: 100%; padding: 12px 14px; margin-bottom: 4px;
+    background: #14123a;
+    border: 1px dashed #4b0082; border-radius: 9px;
+    color: #c4b5fd; font-family: inherit; font-size: 13px;
+    cursor: pointer;
+    transition: border-color .2s;
+}
+
+
+.optional { color: #55557a; font-weight: 400; text-transform: none; letter-spacing: 0; }
+
+
+
+#PostInput, #PostTags, #PostTitle {
+    width: 100%;
+    padding: 12px 14px;
+    font-size: 15px; font-family: inherit;
+    line-height: 1.5;
+    background: #14123a;
+    border: 1px solid #4b0082;
+    border-radius: 9px;
+    color: #e0e0ff;
+    outline: none;
+    -webkit-appearance: none;
+    transition: border-color .2s, box-shadow .2s;
+}
+
+
+#PostInput:focus, #PostTags:focus, #PostTitle:focus {
+    border-color: #a855f7; box-shadow: 0 0 14px rgba(168,85,247,.5);
+}
+
+
+#PostInput::placeholder, #PostTags::placeholder, #PostTitle::placeholder { color: #55557a; }
+
+
+/* the main box grows with what is typed */
+#PostInput { min-height: 96px; resize: none; overflow: hidden; display: block; }
+
+
+
+/* the labels and the explanation inside that pop-up */
+#PopupBox label[for="PostTitle"],
+#PopupBox label[for="PostInput"],
+#PopupBox label[for="PostTags"] {
+    display: block; text-align: left;
+    margin: 14px 0 6px;
+    font-size: 11px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 1.5px; color: #9aa0c0;
+}
+
+
+#PopupBox label[for="PostInput"] { margin-top: 4px; }
+
+
+/* the paragraph explaining how tags work */
+#PopupBox .post-hint {
+    margin: 12px 0 0; padding: 10px 12px;
+    text-align: left;
+    font-size: 11.5px; line-height: 1.55; color: #7a7a9e;
+    background: rgba(168,85,247,.07);
+    border-left: 2px solid #4b0082;
+    border-radius: 0 7px 7px 0;
+}
+
+
+
+#ToPostButton {
+    width: 100%; margin-top: 18px; padding: 14px;
+    font-size: 15px; font-weight: 800;
+    letter-spacing: 1.5px; text-transform: uppercase;
+    font-family: inherit; color: #fff;
+    background: linear-gradient(135deg, #7c3aed, #4c1d95);
+    border: 1px solid #a855f7; border-radius: 10px; cursor: pointer;
+    box-shadow: 0 0 20px rgba(168,85,247,.4);
+    transition: transform .15s, box-shadow .25s;
+}
+
+
+
+/* ===== THE FEED ===== */
+/* One card per post: who wrote it on top, then the text, then tags. */
+.feed-post {
+    background: linear-gradient(145deg, rgba(10,10,46,.92), rgba(26,26,74,.92));
+    border: 1px solid #4b0082;
+    border-radius: 14px;
+    margin-bottom: 16px;
+    overflow: hidden;
+    box-shadow: 0 0 22px rgba(138,43,226,.22), 0 8px 26px rgba(0,0,0,.5);
+    transition: border-color .2s, box-shadow .2s;
+    animation: feed-in .45s ease-out both;
+}
+
+
+@keyframes feed-in {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: none; }
+}
+
+
+/* the first few arrive one after another instead of all at once */
+.feed-post:nth-child(1) { animation-delay: .00s; }
+
+
+.feed-post:nth-child(2) { animation-delay: .05s; }
+
+
+.feed-post:nth-child(3) { animation-delay: .10s; }
+
+
+.feed-post:nth-child(4) { animation-delay: .15s; }
+
+
+.feed-post:nth-child(5) { animation-delay: .20s; }
+
+
+
+/* who posted it */
+.feed-head {
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px 18px;
+    cursor: pointer;
+    transition: background .15s;
+}
+
+
+.feed-who { flex: 1; min-width: 0; }
+
+   /* lets a long name shorten instead of stretching */
+.feed-nick { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+
+.feed-name {
+    display: flex; align-items: center; gap: 5px;
+    font-size: 15px; font-weight: 700; color: #e0e0ff;
+}
+
+
+.feed-name .verified-tick { width: 15px; height: 15px; }
+
+
+.feed-at { font-size: 12px; color: #7a7a9e; }
+
+
+
+.feed-title {
+    padding: 2px 18px 6px;
+    font-size: 17px; font-weight: 700; line-height: 1.3;
+    color: #e0e0ff;
+    overflow-wrap: anywhere;
+}
+
+
+.feed-post.banned .feed-title { color: #fca5a5; }
+
+
+
+/* grey, because this is only the preview - the pop-up shows it properly */
+.feed-text {
+    padding: 0 18px 14px;
+    font-size: 15px; line-height: 1.6; color: #8b8bb8;
+    white-space: pre-wrap;          /* keeps the writer's line breaks */
+    overflow-wrap: anywhere;
+}
+
+
+/* very long posts get cut off with a fade rather than filling the page */
+.feed-text.clamped {
+    max-height: 150px; overflow: hidden;
+    -webkit-mask-image: linear-gradient(#000 60%, transparent);
+    mask-image: linear-gradient(#000 60%, transparent);
+}
+
+
+.feed-more {
+    display: block; width: 100%;
+    padding: 9px; margin-bottom: 6px;
+    background: transparent; border: none;
+    font-family: inherit; font-size: 12px; font-weight: 700;
+    letter-spacing: .5px; color: #a855f7; cursor: pointer;
+}
+
+
+
+/* the pictures on a post, one under the other */
+.image-stack { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
+
+
+
+/* the slot is what makes it square - the picture fills it and is cropped,
+   so ten photos of ten different shapes still line up */
+.image-slot { position: relative; }
+
+
+.image-slot img {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    object-fit: cover;
+    display: block;
+    border-radius: 10px;
+    border: 1px solid rgba(75,0,130,.7);
+    cursor: zoom-in;
+    transition: border-color .2s, filter .2s;
+}
+
+
+
+/* 1/3, 2/3 ... only when there is more than one */
+.image-num {
+    position: absolute; top: 9px; right: 9px;
+    padding: 2px 9px;
+    font-size: 11px; font-weight: 700;
+    color: #e0e0ff;
+    background: rgba(5,5,31,.72);
+    border: 1px solid rgba(168,85,247,.45);
+    border-radius: 999px;
+    backdrop-filter: blur(3px);
+    pointer-events: none;               /* the click belongs to the picture */
+}
+
+
+
+/* inside a feed card the stack keeps the card's side padding */
+.feed-post .image-stack { padding: 0 18px; }
+
+
+
+/* one picture on its own, filling the pop-up */
+.image-viewer {
+    display: flex; align-items: center; justify-content: center;
+    height: 100%; padding: 8px;
+}
+
+
+.image-viewer img {
+    max-width: 100%; max-height: 100%;
+    object-fit: contain;                /* contain, not cover - nothing is cut off here */
+    border-radius: 10px;
+    border: 1px solid rgba(75,0,130,.7);
+}
+
+
+
+/* a post from a banned account, matching the account cards */
+.feed-post.banned {
+    border-color: #7f1d1d;
+    background: linear-gradient(145deg, rgba(46,10,10,.9), rgba(74,26,26,.9));
+}
+
+
+.feed-post.banned .feed-nick { color: #f87171; }
+
+
+.feed-post.banned .avatar { border-color: #f87171; filter: grayscale(1); opacity: .7; }
+
+
+.feed-post.banned .feed-tags { color: #b91c1c; }
+
+
+.feed-banned {
+    display: none;                 /* only on posts from banned accounts */
+    padding: 1px 7px;
+    font-size: 9px; font-weight: 700;
+    letter-spacing: 1px; text-transform: uppercase;
+    color: #f87171;
+    border: 1px solid #7f1d1d;
+    border-radius: 999px;
+}
+
+
+.feed-post.banned .feed-banned { display: inline-block; }
+
+
+
+.feed-tags {
+    padding: 0 18px 9px;
+    font-size: 12px; color: #7c3aed; line-height: 1.7;
+}
+
+
+
+/* ===== THE ADMIN ===== */
+.doom-yes, .doom-no {
+    display: block; width: 100%; margin-top: 10px; padding: 13px;
+    font-family: inherit; font-size: 14px; font-weight: 800; letter-spacing: .5px;
+    color: #fff; border-radius: 10px; cursor: pointer;
+    transition: transform .15s, box-shadow .25s;
+}
+
+
+.doom-yes {
+    background: linear-gradient(135deg, #b91c1c, #7f1d1d);
+    border: 1px solid #f87171;
+    box-shadow: 0 0 20px rgba(248,113,113,.35);
+}
+
+
+.doom-no {
+    background: linear-gradient(135deg, #1d4ed8, #1e3a8a);
+    border: 1px solid #3b9dff;
+    box-shadow: 0 0 20px rgba(59,157,255,.3);
+}
+
+
+
+/* ===== REPORTING ===== */
+/* ten of them with long labels, so a list rather than pills in a row */
+.report-reason {
+    display: block; width: 100%;
+    margin-bottom: 7px; padding: 11px 15px;
+    font-family: inherit; font-size: 13.5px; font-weight: 600; text-align: left;
+    color: #c4b5fd;
+    background: rgba(10,10,46,.6);
+    border: 1px solid #34246b; border-radius: 10px;
+    cursor: pointer;
+    transition: color .16s, border-color .16s, background .16s, box-shadow .2s;
+}
+
+
+.report-reason.on { color: #fff; border-color: #f87171; background: rgba(248,113,113,.22); }
+
+
+
+/* only appears once "other" is picked */
+#OtherReasonBox { display: none; margin-top: 14px; }
+
+
+#OtherReasonBox.open { display: block; animation: appear .2s ease-out both; }
+
+
+#OtherReasonBox label {
+    display: block; margin-bottom: 6px;
+    font-size: 12px; font-weight: 700; letter-spacing: .6px;
+    text-transform: uppercase; color: #8b8bb8; text-align: left;
+}
+
+
+#OtherReason {
+    width: 100%; padding: 11px 13px;
+    font-size: 14px; font-family: inherit;
+    background: #14123a; border: 1px solid #4b0082; border-radius: 9px;
+    color: #e0e0ff; outline: none;
+    transition: border-color .2s, box-shadow .2s;
+}
+
+
+#OtherReason:focus { border-color: #f87171; box-shadow: 0 0 12px rgba(248,113,113,.3); }
+
+
+#SendOtherReason {
+    width: 100%; margin-top: 10px; padding: 11px;
+    font-family: inherit; font-size: 14px; font-weight: 800; letter-spacing: 1px;
+    text-transform: uppercase; color: #fff;
+    background: linear-gradient(135deg, #b91c1c, #7f1d1d);
+    border: 1px solid #f87171; border-radius: 9px; cursor: pointer;
+    transition: box-shadow .2s, transform .15s;
+}
+
+
+@keyframes appear { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+
+
+
+/* ===== MESSAGE BUBBLE ===== */
+/* the corner they stack in. none of it catches clicks, only the bubbles do,
+   so the page underneath still works */
+#BubbleStack {
+    /* over the feed and over #ActionButton (800), under a pop-up (9999).
+       bottom clears the action button instead of sitting behind it. */
+    position: fixed; right: 26px; bottom: 96px; z-index: 900;
+    display: flex; flex-direction: column; align-items: flex-end; gap: 10px;
+    pointer-events: none;
+}
+
+
+.msg-bubble {
+    position: relative;
+    pointer-events: auto;
+    max-width: min(340px, calc(100vw - 36px));
+    padding: 14px 34px 14px 16px;      /* room on the right for the x */
+    font-size: 14px; line-height: 1.5;
+    color: #e0e0ff;
+    background: linear-gradient(150deg, rgba(26,26,74,.97), rgba(10,10,46,.97));
+    border: 1px solid #4b0082;
+    border-radius: 16px 16px 4px 16px; /* the squared corner is the tail */
+    box-shadow: 0 0 22px rgba(138,43,226,.28), 0 10px 26px rgba(0,0,0,.5);
+    animation: bubble-in .22s ease-out both;
+    overflow-wrap: anywhere;
+}
+
+
+@keyframes bubble-in {
+    from { opacity: 0; transform: translateY(12px) scale(.96); }
+    to   { opacity: 1; transform: none; }
+}
+
+
+.msg-bubble.going { animation: bubble-out .2s ease-in forwards; }
+
+
+@keyframes bubble-out {
+    to { opacity: 0; transform: translateX(18px) scale(.96); }
+}
+
+
+.msg-close {
+    position: absolute; top: 7px; right: 9px;
+    padding: 2px 6px;
+    font-size: 17px; line-height: 1; font-family: inherit;
+    color: #6b7280; background: transparent; border: none; cursor: pointer;
+    transition: color .15s;
+}
+
+
+.msg-bubble .msg-text:empty { display: none; }
+
+
+
+@media (max-width: 560px) {
+    #BubbleStack { right: 18px; left: 12px; bottom: 84px; align-items: stretch; }
+    .msg-bubble { max-width: none; }
+}
+
+/* ===== PHONES ===== */
+@media (max-width: 620px) {
+    /* Two rows: the name, then the buttons underneath filling the width.
+       Four buttons and a wordmark never fitted on 360px in one line. */
+    #TopBar {
+        /* room under the buttons - the selected one has a border and a glow,
+           and both were being clipped by the bar's edge */
+        min-height: 0; padding: 10px 12px 16px; gap: 10px;
+        justify-content: space-between;
+        overflow: visible;
+    }
+    /* the whole first line, which is what pushes the buttons onto the second */
+    #TopBar .brand { flex: 1 0 100%; font-size: 17px; gap: 6px; margin-right: 0; }
+    #TopBar .brand svg { width: 24px; height: 24px; }
+
+    .PageButton {
+        flex: 1;                        /* share the width evenly */
+        min-width: 0;
+        padding: 12px 4px;              /* 46px tall, the size a thumb needs */
+        font-size: 12px; letter-spacing: .3px;
+        line-height: 1.1;
+    }
+    /* on #Main, never on body - body padding insets the top bar too, so it
+       stopped being flush with the top and sides of the screen */
+    #Main { padding: 14px 12px 90px; }
+
+    /* room to actually hit things */
+    .info-row, .action-row { padding: 15px 14px; }
+    .post-menu-item { padding: 12px 12px; }
+    .report-reason { padding: 13px 14px; }
+    .feed-act { padding: 9px 14px; }
+    .subscribe-btn, .message-btn { padding: 12px 22px; }
+    .account-actions { gap: 8px; }
+
+    /* the pop-up was 62vw of a phone, which is nothing */
+    #PopupBox { width: calc(100vw - 20px) !important; max-width: none !important; }
+    #PopupBox.image-mode { width: fit-content !important; }
+
+    .account-grid { grid-template-columns: repeat(2, 1fr); }
+    .chat-row, .person-row { padding: 12px 12px; }
+
+    /* the conversation gets the whole screen */
+    #PageChat.on { padding: 12px 12px 10px; }   /* it is pinned now, no height needed */
+    #ChatInput { padding: 13px 15px; font-size: 16px; }   /* 16px or iOS zooms in */
+    #ChatSend { width: 48px; height: 48px; }
+    .bubble { max-width: 82%; }
+
+    #PostInput, #PostTags, #PostTitle, #OtherReason, #SearchInput,
+    #BioInput, #TagsInput { font-size: 16px; }            /* same reason */
+}
+
+@media (max-width: 380px) {
+    #TopBar .brand { font-size: 15px; }
+    .PageButton { font-size: 11px; padding: 11px 2px; }
+    .account-grid { grid-template-columns: 1fr; }
+}
+
+
+
+/* marks where a post was while it waits to be really deleted */
+.post-gap { display: none; }
+
+
+.delete-countdown { margin: 6px 0 10px; font-size: 13px; color: #8b8bb8; }
+
+
+.delete-countdown b { color: #f87171; font-size: 17px; }
+
+
+#DeletePostCancel {
+    padding: 7px 18px;
+    font-family: inherit; font-size: 13px; font-weight: 700;
+    color: #c4b5fd;
+    background: transparent; border: 1px solid #4b0082; border-radius: 999px;
+    cursor: pointer;
+    transition: border-color .18s, color .18s, background .18s;
+}
+
+
+
+/* a post on its way out after being deleted */
+.feed-post.going {
+    overflow: hidden;
+    animation: post-going .26s ease-in forwards;
+    pointer-events: none;
+}
+
+
+@keyframes post-going {
+    from { opacity: 1; transform: none; max-height: 1200px; }
+    to   { opacity: 0; transform: scale(.96); max-height: 0;
+           margin-bottom: 0; padding: 0; border-width: 0; }
+}
+
+
+
+/* the ... in the corner of a post */
+.post-menu { position: relative; flex: none; }
+
+
+.post-menu-btn {
+    padding: 2px 9px;
+    font-size: 20px; line-height: 1; font-family: inherit;
+    color: #6b6b95;
+    background: transparent; border: none; border-radius: 8px;
+    cursor: pointer;
+    transition: color .15s, background .15s;
+}
+
+
+.post-menu.open .post-menu-btn { color: #c4b5fd; background: rgba(168,85,247,.18); }
+
+
+
+.post-menu-list {
+    display: none;
+    position: absolute; top: 100%; right: 0; z-index: 30;
+    min-width: 152px;
+    padding: 5px;
+    background: linear-gradient(150deg, #16143d, #0d0b2b);
+    border: 1px solid #4b0082;
+    border-radius: 11px;
+    box-shadow: 0 10px 26px rgba(0,0,0,.55);
+    animation: menu-in .14s ease-out both;
+}
+
+
+.post-menu.open .post-menu-list { display: block; }
+
+
+@keyframes menu-in { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: none; } }
+
+
+
+.post-menu-item {
+    display: flex; align-items: center; gap: 9px;
+    width: 100%; padding: 9px 11px;
+    font-family: inherit; font-size: 13px; font-weight: 600; text-align: left;
+    color: #c4b5fd;
+    background: transparent; border: none; border-radius: 7px;
+    cursor: pointer;
+    transition: background .14s, color .14s;
+}
+
+
+.post-menu-item.danger { color: #f87171; }
+
+
+.post-menu-item .mi { width: 15px; text-align: center; font-size: 14px; }
+
+
+
+/* on the open post the ... sits at the end of the like row */
+.post-full-bar { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+
+
+.post-full-bar .feed-actions { padding: 4px 0 0; }
+
+
+/* the menu would be cut off by the pop-up's own scrolling otherwise */
+.post-full-bar .post-menu-list { top: auto; bottom: 100%; margin-bottom: 6px; }
+
+
+
+/* the foot of the card */
+.feed-actions {
+    display: flex; align-items: center; gap: 9px;
+    padding: 3px 18px 15px;
+}
+
+
+.feed-act {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 7px 15px;
+    font-family: inherit; font-size: 13px; font-weight: 700;
+    color: #8b8bb8;
+    background: rgba(10,10,46,.6);
+    border: 1px solid #34246b;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: color .18s, border-color .18s, background .18s, box-shadow .25s, transform .12s;
+}
+
+
+/* hollow until it is pressed, then it fills in */
+.feed-act svg {
+    width: 15px; height: 15px; flex: none;
+    fill: none;
+    stroke: currentColor; stroke-width: 1.7;
+    stroke-linejoin: round;
+    transition: fill .18s;
+}
+
+
+.feed-act.on svg { fill: currentColor; stroke: none; }
+
+
+.feed-act:active { transform: scale(.94); }
+
+
+
+/* pink for the like, so it reads as warm next to the purple */
+
+
+/* ready for when the clicks are wired up */
+.feed-act.like.on {
+    color: #fff; border-color: #ec4899;
+    background: linear-gradient(135deg, #db2777, #9d174d);
+    box-shadow: 0 0 18px rgba(236,72,153,.5);
+}
+
+
+.feed-act.dislike.on {
+    color: #fff; border-color: #ef4444;
+    background: linear-gradient(135deg, #b91c1c, #7f1d1d);
+    box-shadow: 0 0 18px rgba(239,68,68,.4);
+}
+
+
+/* nothing is drawn at all when nobody has liked it yet */
+.like-count:empty { display: none; }
+
+
+
+.feed-empty {
+    padding: 60px 20px; text-align: center;
+    color: #55557a; font-size: 14px;
+}
+
+
+.feed-empty .big { display: block; font-size: 40px; margin-bottom: 12px; opacity: .5; }
+
+
+
+/* ===== ONE POST ON ITS OWN ===== */
+.post-full { text-align: left; margin-top: 4px; }
+
+
+.post-full-image {
+    width: 100%; border-radius: 10px; margin-bottom: 14px; display: block;
+}
+
+
+.post-full-text {
+    font-size: 15px; line-height: 1.6; color: #e0e0ff;
+    white-space: pre-wrap;          /* keeps the writer's line breaks */
+    overflow-wrap: anywhere;
+    max-height: 46vh; overflow-y: auto;
+}
+
+
+.post-full-tags {
+    margin-top: 14px; padding-top: 12px;
+    border-top: 1px solid rgba(75,0,130,.45);
+    font-size: 12px; color: #7c3aed; line-height: 1.7;
+}
+
+
+
+/* the pop-up version scrolls on its own */
+#AllPostsList {
+    max-height: 58vh;
+    overflow-y: auto;
+    text-align: left;
+    margin: 0 -30px -28px;          /* back out to the pop-up's edges */
+    border-top: 1px solid rgba(75,0,130,.45);
+}
+
+
+
+.no-posts {
+    padding: 40px 20px;
+    text-align: center;
+    color: #55557a; font-size: 13px;
+}
+
+
+.no-posts .big { display: block; font-size: 34px; margin-bottom: 10px; opacity: .5; }
+
+
+
+/* ===== EDITING THE PROFILE ===== */
+/* The bio turns into an input, and Save / Cancel replace the two rows. */
+/* The recommendation tags, one pill each. */
+.tag-chip {
+    display: inline-block;
+    margin: 3px 5px 3px 0;
+    padding: 3px 11px;
+    font-size: 13px;
+    color: #c4b5fd;
+    background: rgba(124,58,237,.22);
+    border: 1px solid rgba(168,85,247,.5);
+    border-radius: 999px;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.06);
+}
+
+
+/* the row grows downwards once there are a lot of them */
+#MyTags { margin: -3px 0; }
+
+
+/* a hint under the input while the tags are being typed */
+.edit-hint { font-size: 11px; color: #6b6b95; margin-top: 5px; font-style: italic; }
+
+
+
+#BioInput, #TagsInput {
+    width: 100%;
+    padding: 10px 12px;
+    font-size: 15px; font-family: inherit;
+    line-height: 1.5;
+    background: #14123a;
+    border: 1px solid #a855f7;
+    border-radius: 8px;
+    color: #e0e0ff;
+    outline: none;
+    -webkit-appearance: none;
+    transition: box-shadow .2s;
+    /* the JS sets the height on every keystroke, so no scrollbar and no
+       drag handle — otherwise the two would fight each other */
+    resize: none;
+    overflow: hidden;
+    min-height: 44px;
+    display: block;      /* kills the few pixels of gap under a textarea */
+}
+
+
+#BioInput:focus, #TagsInput:focus { box-shadow: 0 0 12px rgba(168,85,247,.55); }
+
+
+#BioInput::placeholder, #TagsInput::placeholder { color: #55557a; }
+
+
+
+#ProfileEditDiv {
+    display: flex;
+    gap: 10px;
+    padding: 14px 20px;
+}
+
+
+#ProfileEditDiv button {
+    flex: 1;
+    padding: 12px;
+    font-size: 14px; font-weight: 700;
+    letter-spacing: 1px; text-transform: uppercase;
+    font-family: inherit;
+    border-radius: 9px; cursor: pointer;
+    transition: background .2s, border-color .2s, color .2s, transform .12s;
+}
+
+
+#SaveProfile {
+    color: #fff;
+    background: linear-gradient(135deg, #7c3aed, #4c1d95);
+    border: 1px solid #a855f7;
+    box-shadow: 0 0 18px rgba(168,85,247,.35);
+}
+
+
+#CancelSaveProfile {
+    color: #9aa0c0;
+    background: transparent;
+    border: 1px solid #2d2d55;
+}
+
+
+
+/* ===== BUTTONS ===== */
+.primary {
+    padding: 13px 26px;
+    font-size: 14px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase;
+    color: #fff;
+    background: linear-gradient(135deg, #7c3aed, #4c1d95);
+    border: 1px solid #a855f7; border-radius: 10px; cursor: pointer;
+    box-shadow: 0 0 20px rgba(168,85,247,.4);
+    transition: transform .15s, box-shadow .25s;
+}
+
+
+
+/* ===== FLOATING ACTION BUTTON ===== */
+/* Sits over everything in the bottom right. What it shows depends on
+   the page — a plus on Feed, a message icon on Chats, hidden elsewhere. */
+#ActionButton {
+    position: fixed;
+    right: 26px; bottom: 26px;
+    z-index: 800;
+    width: 58px; height: 58px;
+    display: none;                      /* PageUpdate decides */
+    align-items: center; justify-content: center;
+    background: linear-gradient(135deg, #7c3aed, #4c1d95);
+    border: 1px solid #a855f7;
+    border-radius: 50%;
+    color: #fff;
+    cursor: pointer;
+    box-shadow: 0 0 24px rgba(168,85,247,.5), 0 6px 18px rgba(0,0,0,.6);
+    transition: transform .18s, box-shadow .25s;
+}
+
+
+#ActionButton.on { display: flex; }
+
+
+#ActionButton:active { transform: translateY(-1px) scale(.97); }
+
+
+
+#ActionButton svg { width: 26px; height: 26px; display: block; }
+
+
+/* one icon at a time — the class on the button picks which */
+#ActionButton .ico { display: none; animation: popIn .22s ease-out; }
+
+
+#ActionButton.plus .ico-plus { display: block; }
+
+
+@keyframes popIn {
+    from { opacity: 0; transform: scale(.5) rotate(-90deg); }
+    to   { opacity: 1; transform: scale(1) rotate(0); }
+}
+
+
+
+/* Nothing behind a pop-up may scroll. The box itself still can, it sets its
+   own overflow when a height was asked for. */
+body.popup-open { overflow: hidden; }
+
+
+
+/* ===== POP-UP (same shape as the login page) ===== */
+#PopupOverlay {
+    position: fixed; top: 0; right: 0; bottom: 0; left: 0;
+    background: rgba(0,0,0,.72);
+    z-index: 9999;
+    display: flex; align-items: center; justify-content: center;
+    animation: fade .2s ease-out;
+}
+
+
+@keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+
+
+#PopupBox {
+    position: relative;
+    display: flex; flex-direction: column;      /* header pinned, body scrolls */
+    width: 400px; max-width: calc(100vw - 40px);
+    max-height: calc(100dvh - 32px);
+    padding: 34px 30px 28px;
+    text-align: center;
+    background: linear-gradient(145deg, #0a0a2e, #1a1a4a);
+    border: 1px solid #4b0082; border-radius: 16px;
+    box-shadow: 0 0 26px rgba(138,43,226,.6), 0 10px 34px rgba(0,0,0,.8);
+    animation: pop .32s cubic-bezier(.2,1.5,.4,1);
+}
+
+
+@keyframes pop { from { opacity: 0; transform: scale(.85); } to { opacity: 1; transform: scale(1); } }
+
+
+/* The body is what scrolls. Everything used to sit in the box itself, so on a
+   tall pop-up the x scrolled away with the buttons and could not be reached. */
+#PopupBody {
+    flex: 1; min-height: 0;                     /* min-height or flex will not scroll it */
+    overflow-y: auto;
+}
+#PopupClose {
+    position: absolute; top: 10px; right: 12px; z-index: 3;
+    background: transparent; border: none; color: #6b7280;
+    font-size: 22px; line-height: 1; cursor: pointer; padding: 4px 8px;
+}
+
+
+
+#PopupBack {
+    position: absolute; top: 10px; left: 12px;
+    background: transparent; border: none; color: #6b7280;
+    font-size: 22px; line-height: 1; cursor: pointer; padding: 4px 8px;
+    transition: color .15s, transform .15s;
+}
+
+
+/* the title would otherwise sit under the arrow */
+#PopupBox.has-back #PopupTitle { padding: 0 34px; }
+
+
+
+/* feed cards shown inside a pop-up instead of on the page */
+#AllPostsList { text-align: left; margin-top: 10px; }
+
+
+#AllPostsList .feed-post:last-child { margin-bottom: 0; }
+
+
+/* the buttons under a single post sit left like everything else there */
+.post-full .feed-actions { padding: 4px 0 0; }
+
+
+#PopupIcon  { font-size: 48px; line-height: 1; margin-bottom: 12px; }
+
+
+#PopupTitle { margin: 0 0 8px; font-size: 22px; font-weight: 800; color: #e0e0ff; }
+
+
+#PopupText  { margin: 0; font-size: 14px; color: #9aa0c0; line-height: 1.6; }
+
+
+/* The account pop-up passes no icon, title or text — collapse those
+   instead of leaving a tall empty gap above the profile. */
+#PopupIcon:empty, #PopupTitle:empty, #PopupText:empty { display: none; }
+
+
+
+#PopupBox.good #PopupTitle { color: #4ade80; }
+
+
+#PopupBox.bad  #PopupTitle { color: #f87171; }
+
+
+#PopupBox.warn #PopupTitle { color: #fbbf24; }
+
+
+
+/* ===== PHONES ===== */
+@media (max-width: 480px) {
+    /* The top bar and the buttons are handled by the 620px block above. Setting
+       height: 56px here put the fixed height back, and the wrapped second row of
+       buttons hung outside the bar again - three attempts at fixing it upstream
+       were all overridden right here. */
+    /* #Main padding comes from the 620px block - 50px at the bottom was not
+       enough to clear the action button */
+    .PageTitle { font-size: 21px; }
+    .card { padding: 16px 17px; }
+    .avatar { width: 120px; height: 120px; }
+    .profile-header { padding: 26px 18px 22px; }
+    .profile-header .avatar { width: 108px; height: 108px; }
+    .profile-name { font-size: 21px; }
+    .feed-head { padding: 12px 14px; gap: 10px; }
+    .feed-text { padding: 0 14px 12px; font-size: 14px; }
+    .feed-tags { padding: 0 14px 13px; }
+    .feed-post .image-stack { padding: 0 14px; }
+    .feed-actions { padding: 3px 14px 13px; }
+    #ProfileEditDiv { padding: 13px 16px; }
+    #ActionButton { right: 18px; bottom: 18px; width: 54px; height: 54px; }
+    /* A percentage width set in JS is too narrow on a phone —
+       !important because that is an inline style. */
+    #PopupBox  { padding: 30px 22px 24px; border-radius: 14px; }   /* width comes from the 620px block */
+    #PopupIcon { font-size: 42px; }
+    #PopupTitle{ font-size: 19px; }
+    #PopupClose{ font-size: 26px; padding: 8px 12px; }
+}
+
+
+@media (prefers-reduced-motion: reduce) {
+    #stars, #stars2, .star, .Page.on { animation: none !important; }
+}
+
+
+/* ===== HOVER, FOR MICE ONLY =====
+   A phone has no pointer, so tapping something used to leave the hover
+   style stuck on it: the first tap only 'hovered' and a second was needed
+   to really press it. Behind this query a touch screen never sees them. */
+
+@media (hover: hover) and (pointer: fine) {
+    .back-row:hover { color: #c4b5fd; border-color: #a855f7; }
+    .lang-pick:hover { border-color: #a855f7; color: #e0e0ff; }
+    .lang-pick:hover { color: #e0e0ff; border-color: #a855f7; background: rgba(168,85,247,.14); }
+    .feed-act.like:hover {
+        color: #f472b6; border-color: #f472b6;
+        background: rgba(244,114,182,.12);
+        box-shadow: 0 0 15px rgba(244,114,182,.3);
+    }
+
+    .chat-row.banned:hover, .person-row.banned:hover { border-color: #f87171; background: rgba(248,113,113,.13); box-shadow: 0 0 18px rgba(248,113,113,.3); }
+    .chat-row.is-verified:hover, .person-row.is-verified:hover { border-color: #3b9dff; background: rgba(59,157,255,.13); box-shadow: 0 0 18px rgba(59,157,255,.35); }
+
+    .PageButton:hover { color: #c4b5fd; background: rgba(168,85,247,.1); }
+    .avatar.editing:hover img { filter: grayscale(1) brightness(.45); }
+    .avatar.editing:hover #ChangePicture,
+    #ChangePicture:focus-visible { opacity: 1; }
+    #CopyAccLink:hover {
+        color: #c4b5fd; border-color: #a855f7; background: rgba(168,85,247,.14);
+    }
+    .sub-count button:hover { background: rgba(168,85,247,.14); color: #e0e0ff; }
+    .sub-count button:hover b { color: #e0e0ff; }
+    .message-btn:hover {
+        color: #fff; border-color: #a855f7;
+        background: rgba(168,85,247,.16);
+        box-shadow: 0 0 18px rgba(168,85,247,.4);
+        transform: translateY(-2px);
+    }
+    .subscribe-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 0 30px rgba(168,85,247,.7);
+    }
+    .subscribe-btn.on:hover {
+        border-color: #f87171; color: #f87171;
+        box-shadow: 0 0 14px rgba(248,113,113,.25);
+    }
+    /* hovering a subscribed button offers to undo it */
+    .subscribe-btn.on:hover::after { content: " \2715"; font-size: 11px; }
+    .info-row:hover { background: rgba(168,85,247,.09); }
+    .info-row.editing:hover { background: none; }
+    .action-row:hover { background: rgba(168,85,247,.09); }
+    .action-row.danger:hover { background: rgba(248,113,113,.1); }
+    #ChatBack:hover { color: #a855f7; transform: translateX(-3px); }
+    #ChatSend:hover { transform: scale(1.07); box-shadow: 0 0 20px rgba(168,85,247,.6); }
+    .chat-row:hover, .person-row:hover {
+        background: rgba(168,85,247,.12);
+        border-color: #a855f7;
+        box-shadow: 0 0 18px rgba(168,85,247,.28);
+    }
+    .search-filters label:hover { color: #c4b5fd; border-color: #a855f7; }
+    #SearchClear:hover { color: #a855f7; }
+    .account-card:hover {
+        background: rgba(168,85,247,.12);
+        border-color: #a855f7;
+        transform: translateY(-3px);
+        box-shadow: 0 0 20px rgba(168,85,247,.35);
+    }
+    .account-card.is-verified:hover {
+        border-color: #3b9dff;
+        background: rgba(59,157,255,.13);
+        box-shadow: 0 0 20px rgba(59,157,255,.4);
+    }
+    .account-card.banned:hover {
+        border-color: #f87171;
+        background: rgba(248,113,113,.14);
+        box-shadow: 0 0 20px rgba(248,113,113,.35);
+    }
+    .post-tile:hover { opacity: .78; }
+    .post-row:hover { background: rgba(168,85,247,.09); }
+    .show-all-row:hover { background: rgba(168,85,247,.12); }
+    #PopupBox.image-mode #PopupClose:hover,
+    #PopupBox.image-mode #PopupBack:hover { opacity: 1; transform: scale(1.12); color: #fff; }
+    #imageAttachToPost:hover { border-color: #a855f7; }
+    #ToPostButton:hover { transform: translateY(-2px); box-shadow: 0 0 34px rgba(168,85,247,.7); }
+    .feed-post:hover {
+        border-color: #6d28d9;
+        box-shadow: 0 0 28px rgba(138,43,226,.4), 0 8px 26px rgba(0,0,0,.5);
+    }
+    .feed-head:hover { background: rgba(168,85,247,.08); }
+    .feed-more:hover { color: #c4b5fd; }
+    .image-slot img:hover { border-color: #a855f7; filter: brightness(1.06); }
+    .feed-post.banned:hover {
+        border-color: #f87171;
+        box-shadow: 0 0 28px rgba(248,113,113,.35), 0 8px 26px rgba(0,0,0,.5);
+    }
+    .feed-post.banned .feed-head:hover { background: rgba(248,113,113,.09); }
+    .doom-yes:hover { transform: translateY(-2px); box-shadow: 0 0 34px rgba(248,113,113,.7); }
+    .doom-no:hover { transform: translateY(-2px); box-shadow: 0 0 34px rgba(59,157,255,.6); }
+    .report-reason:hover {
+        color: #f87171; border-color: #f87171;
+        background: rgba(248,113,113,.12);
+        box-shadow: 0 0 14px rgba(248,113,113,.25);
+    }
+    #SendOtherReason:hover { box-shadow: 0 0 22px rgba(248,113,113,.5); transform: translateY(-1px); }
+    .msg-close:hover { color: #a855f7; }
+    #DeletePostCancel:hover { border-color: #a855f7; color: #e0e0ff; background: rgba(168,85,247,.14); }
+    .post-menu-btn:hover { color: #c4b5fd; background: rgba(168,85,247,.12); }
+    .post-menu-item:hover { background: rgba(168,85,247,.16); color: #e0e0ff; }
+    .post-menu-item.danger:hover { background: rgba(248,113,113,.14); color: #fca5a5; }
+    .feed-act.dislike:hover {
+        color: #f87171; border-color: #b91c1c;
+        background: rgba(248,113,113,.1);
+        box-shadow: 0 0 15px rgba(248,113,113,.25);
+    }
+    .feed-post.banned .feed-act:hover { border-color: #b91c1c; }
+    #SaveProfile:hover { transform: translateY(-1px); box-shadow: 0 0 30px rgba(168,85,247,.6); }
+    #CancelSaveProfile:hover { border-color: #f87171; color: #f87171; }
+    .primary:hover { transform: translateY(-2px); box-shadow: 0 0 34px rgba(168,85,247,.7); }
+    #ActionButton:hover {
+        transform: translateY(-3px) scale(1.05);
+        box-shadow: 0 0 38px rgba(168,85,247,.85), 0 8px 22px rgba(0,0,0,.6);
+    }
+    #PopupClose:hover { color: #a855f7; }
+    #PopupBack:hover { color: #a855f7; transform: translateX(-3px); }
+}

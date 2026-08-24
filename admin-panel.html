@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#05051f">
+    <title>Welcome Admin!</title>
+    <script src="https://code.jquery.com/jquery-4.0.0.js"></script>
+    <style>
+        *,*::before,*::after { box-sizing: border-box; }
+        html, body { height: 100%; }
+        body {
+            margin: 0; padding: 30px 20px 60px;
+            background: #05051f; color: #e0e0ff;
+            font-family: Arial, Helvetica, sans-serif;
+            min-height: 100vh; min-height: 100dvh;
+        }
+        body::before {
+            content: ""; position: fixed; inset: 0; z-index: -2;
+            background:
+                radial-gradient(ellipse 70% 50% at 50% 0%,  rgba(136,19,55,.30), transparent 70%),
+                radial-gradient(ellipse 60% 50% at 15% 85%, rgba(88,28,135,.22), transparent 70%),
+                #05051f;
+        }
+        .wrap { max-width: 940px; margin: 0 auto; }
+
+        /* ===== HEADER ===== */
+        .top {
+            display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+            padding-bottom: 18px; margin-bottom: 22px;
+            border-bottom: 1px solid #4b0082;
+        }
+        h1 { margin: 0; font-size: 25px; letter-spacing: .5px; }
+        h1 .crown { color: #fbbf24; }
+        .who { flex: 1; font-size: 13px; color: #8b8bb8; }
+        .btn {
+            padding: 9px 18px;
+            font-family: inherit; font-size: 13px; font-weight: 700;
+            color: #c4b5fd; background: transparent;
+            border: 1px solid #4b0082; border-radius: 999px; cursor: pointer;
+            transition: border-color .16s, color .16s, background .16s;
+        }
+        .btn:hover { border-color: #a855f7; color: #e0e0ff; background: rgba(168,85,247,.14); }
+        .btn.danger { color: #f87171; border-color: #7f1d1d; }
+        .btn.danger:hover { border-color: #f87171; background: rgba(248,113,113,.14); color: #fca5a5; }
+        .btn.good { color: #4ade80; border-color: #14532d; }
+        .btn.good:hover { border-color: #4ade80; background: rgba(74,222,128,.12); }
+
+        /* ===== TABS ===== */
+        .tabs { display: flex; gap: 9px; margin-bottom: 20px; flex-wrap: wrap; }
+        .tab {
+            padding: 9px 20px;
+            font-family: inherit; font-size: 13px; font-weight: 700;
+            color: #8b8bb8; background: rgba(10,10,46,.6);
+            border: 1px solid #34246b; border-radius: 999px; cursor: pointer;
+            transition: all .16s;
+        }
+        .tab:hover { color: #c4b5fd; border-color: #a855f7; }
+        .tab.on {
+            color: #fff; border-color: #a855f7;
+            background: linear-gradient(135deg, #7c3aed, #4c1d95);
+            box-shadow: 0 0 16px rgba(168,85,247,.4);
+        }
+        .panel { display: none; }
+        .panel.on { display: block; animation: appear .22s ease-out both; }
+        @keyframes appear { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+        /* ===== NUMBERS ACROSS THE TOP ===== */
+        .stats { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; }
+        .stat {
+            flex: 1; min-width: 120px; padding: 15px 18px;
+            background: linear-gradient(145deg, rgba(10,10,46,.92), rgba(26,26,74,.92));
+            border: 1px solid #4b0082; border-radius: 13px;
+        }
+        .stat b { display: block; font-size: 26px; color: #c4b5fd; line-height: 1.1; }
+        .stat span { font-size: 11px; letter-spacing: 1px; text-transform: uppercase; color: #7a7a9e; }
+        .stat.bad b { color: #f87171; }
+
+        /* ===== ROWS ===== */
+        .row {
+            display: flex; align-items: center; gap: 14px;
+            padding: 13px 16px; margin-bottom: 9px;
+            background: linear-gradient(145deg, rgba(10,10,46,.92), rgba(26,26,74,.92));
+            border: 1px solid #4b0082; border-radius: 13px;
+        }
+        .row.banned { border-color: #7f1d1d; background: rgba(248,113,113,.07); }
+        .row .pic {
+            width: 44px; height: 44px; flex: none;
+            border-radius: 50%; overflow: hidden;
+            border: 2px solid #a855f7; background: #14123a;
+        }
+        .row.banned .pic { border-color: #f87171; filter: grayscale(1); opacity: .7; }
+        .row .pic img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .row .who-col { flex: 1; min-width: 0; }
+        .row .name { font-size: 15px; font-weight: 700; overflow-wrap: anywhere; }
+        .row.banned .name { color: #f87171; }
+        .row .sub { font-size: 12px; color: #7a7a9e; margin-top: 2px; }
+        .row .acts { display: flex; gap: 7px; flex: none; flex-wrap: wrap; justify-content: flex-end; }
+
+        .chip {
+            display: inline-block; padding: 2px 9px; margin-left: 6px;
+            font-size: 10px; font-weight: 700; letter-spacing: .8px; text-transform: uppercase;
+            border-radius: 999px; vertical-align: 2px;
+        }
+        .chip.admin    { color: #fbbf24; border: 1px solid #78350f; }
+        .chip.creator,
+        .chip.verified { color: #3b9dff; border: 1px solid #1e4976; }
+        .chip.user     { color: #7a7a9e; border: 1px solid #34246b; }
+        .chip.banned   { color: #f87171; border: 1px solid #7f1d1d; }
+
+        .why {
+            margin-top: 7px; padding: 8px 11px;
+            font-size: 12px; color: #fca5a5;
+            background: rgba(248,113,113,.08);
+            border-left: 2px solid #7f1d1d; border-radius: 0 7px 7px 0;
+        }
+        .why ul { margin: 4px 0 0; padding-left: 18px; }
+
+        .snippet { font-size: 13px; color: #8b8bb8; margin-top: 3px; overflow-wrap: anywhere; }
+        .count { font-size: 22px; font-weight: 800; color: #f87171; flex: none; width: 40px; text-align: center; }
+        .count small { display: block; font-size: 9px; letter-spacing: 1px; color: #7a7a9e; font-weight: 400; }
+        .over { border-color: #f87171 !important; box-shadow: 0 0 18px rgba(248,113,113,.2); }
+
+        .empty { padding: 44px 20px; text-align: center; color: #55557a; font-size: 14px; }
+        .empty .big { display: block; font-size: 38px; margin-bottom: 10px; opacity: .5; }
+
+        @media (max-width: 620px) {
+            .row { flex-wrap: wrap; }
+            .row .acts { width: 100%; justify-content: flex-start; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="wrap">
+    <div class="top">
+        <h1><span class="crown">&#128081;</span> Admin panel</h1>
+        <div class="who" id="WhoAmI">checking...</div>
+        <button class="btn" id="Refresh">Refresh</button>
+        <button class="btn" id="ToApp">Astrogram</button>
+        <button class="btn danger" id="LogOut">Log out</button>
+    </div>
+
+    <div class="stats" id="Stats"></div>
+
+    <div class="tabs">
+        <button class="tab on" data-panel="Users">People</button>
+        <button class="tab" data-panel="Reports">Reported posts</button>
+    </div>
+
+    <div class="panel on" id="PanelUsers"><div class="empty">Loading...</div></div>
+    <div class="panel" id="PanelReports"><div class="empty">Loading...</div></div>
+</div>
+
+<script>
+    const link = "/api"
+    const USER_KEY = "astrogram-user"
+    const INDEX_KEY = "astrogram-index"
+
+    const me = localStorage.getItem(USER_KEY) || sessionStorage.getItem(USER_KEY)
+    const myIndex = Number(localStorage.getItem(INDEX_KEY) ?? sessionStorage.getItem(INDEX_KEY))
+    const DEFAULT_PICTURE = "/resources/DefaultProfilePicture.png"
+
+    if (!me) { window.location.replace("login-signup.html") }
+
+    function Escape(text) {
+        return $("<div>").text(text == null ? "" : text).html()   // stops a username being markup
+    }
+
+    //| ====== PEOPLE ====== |\\
+    async function LoadUsers() {
+        const response = await fetch(link + "/admin-users", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ index: myIndex })
+        })
+        if (response.status === 403) {
+            $("body").html("<div class='empty'><span class='big'>&#128274;</span>" +
+                "This page is for admins only.</div>")
+            return null
+        }
+        if (response.status !== 200) { return null }
+        return (await response.json()).users
+    }
+
+    function DrawUsers(users) {
+        let out = ""
+        for (const u of users) {
+            const isMe = u.index === myIndex
+            // why they were banned, without ever naming who reported them
+            let why = ""
+            if (u.banned && u.banReason) {
+                why = u.banReason.top === "other" && (u.banReason.others || []).length
+                    ? `<div class="why"><b>Reported for:</b><ul>` +
+                          u.banReason.others.map(r => `<li>${Escape(r)}</li>`).join("") +
+                      `</ul></div>`
+                    : `<div class="why"><b>Reported for:</b> ${Escape(u.banReason.top)}` +
+                      (u.banReason.count ? ` &mdash; ${u.banReason.count} reports` : "") + `</div>`
+            }
+            out +=
+                `<div class="row${u.banned ? " banned" : ""}">` +
+                    `<div class="pic"><img src="${u.picturePath || DEFAULT_PICTURE}" alt=""></div>` +
+                    `<div class="who-col">` +
+                        `<div class="name">${Escape(u.Username) || "<i>no name</i>"}` +
+                            `<span class="chip ${u.level}">${u.level}</span>` +
+                            (u.banned ? `<span class="chip banned">banned</span>` : "") +
+                        `</div>` +
+                        `<div class="sub">#${u.index} &middot; ${u.posts} posts &middot; ` +
+                            `${u.subscribers} subscribers &middot; ${u.tags.length} tags</div>` +
+                        why +
+                    `</div>` +
+                    `<div class="acts">` +
+                        (u.level === "admin" || isMe ? `<span class="sub">&mdash;</span>`
+                            : u.banned
+                                ? `<button class="btn good unban" data-target="${u.index}">Unban</button>`
+                                : `<button class="btn danger ban" data-target="${u.index}">Ban</button>`) +
+                    `</div>` +
+                `</div>`
+        }
+        $("#PanelUsers").html(out || "<div class='empty'>Nobody here</div>")
+    }
+
+    //| ====== REPORTED POSTS ====== |\\
+    async function LoadReports() {
+        const response = await fetch(link + "/most-reported", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ index: myIndex })
+        })
+        if (response.status !== 200) { return null }
+        return await response.json()
+    }
+
+    function DrawReports(data) {
+        if (!data || !data.reported.length) {
+            $("#PanelReports").html("<div class='empty'><span class='big'>&#127881;</span>" +
+                "Nobody has reported anything</div>")
+            return
+        }
+        let out = ""
+        for (const r of data.reported) {
+            const reasons = Object.keys(r.why)
+                .map(k => `${Escape(k)} &times;${r.why[k]}`).join(" &middot; ")
+            out +=
+                `<div class="row${r.overLimit ? " over" : ""}">` +
+                    `<div class="count">${r.count}<small>REPORTS</small></div>` +
+                    `<div class="who-col">` +
+                        `<div class="name">${Escape(r.title) || "<i>no title</i>"}</div>` +
+                        `<div class="sub">post #${r.id} &middot; by ${Escape(r.ownerName)}</div>` +
+                        `<div class="why">${reasons}</div>` +
+                    `</div>` +
+                    `<div class="acts">` +
+                        `<button class="btn open-post" data-id="${r.id}">Open</button>` +
+                        `<button class="btn danger del-post" data-id="${r.id}">Delete</button>` +
+                    `</div>` +
+                `</div>`
+        }
+        $("#PanelReports").html(out)
+    }
+
+    //| ====== THE NUMBERS ====== |\\
+    function DrawStats(users, reports) {
+        const banned = users.filter(u => u.banned).length
+        const posts = users.reduce((n, u) => n + u.posts, 0)
+        const flagged = reports ? reports.overLimit.length : 0
+        $("#Stats").html(
+            `<div class="stat"><b>${users.length}</b><span>Accounts</span></div>` +
+            `<div class="stat"><b>${posts}</b><span>Posts</span></div>` +
+            `<div class="stat${banned ? " bad" : ""}"><b>${banned}</b><span>Banned</span></div>` +
+            `<div class="stat${flagged ? " bad" : ""}"><b>${flagged}</b><span>Over the limit</span></div>`
+        )
+    }
+
+    async function LoadEverything() {
+        $("#WhoAmI").text("signed in as " + me)
+        const users = await LoadUsers()
+        if (!users) return                       // not an admin, the page already said so
+        const reports = await LoadReports()
+        DrawUsers(users)
+        DrawReports(reports)
+        DrawStats(users, reports)
+    }
+
+    //| ====== BUTTONS ====== |\\
+    $("body").on("click", ".tab", function () {
+        $(".tab").removeClass("on"); $(this).addClass("on")
+        $(".panel").removeClass("on")
+        $("#Panel" + $(this).data("panel")).addClass("on")
+    })
+
+    $("body").on("click", ".ban, .unban", async function () {
+        const target = $(this).data("target")
+        const banned = $(this).hasClass("ban")
+        $(this).prop("disabled", true)
+        await fetch(link + "/set-ban", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ index: myIndex, target: target, banned: banned })
+        })
+        await LoadEverything()
+    })
+
+    $("body").on("click", ".del-post", async function () {
+        const id = $(this).data("id")
+        if (!confirm("Delete post #" + id + "? It cannot be undone.")) return
+        $(this).prop("disabled", true)
+        await fetch(link + "/delete-post", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ id: id, index: myIndex })
+        })
+        await LoadEverything()
+    })
+
+    // the app opens it through the same #post= link the copy button makes
+    $("body").on("click", ".open-post", function () {
+        window.open("/proceedToApp#post=" + $(this).data("id"), "_blank")
+    })
+
+    $("#Refresh").on("click", LoadEverything)
+    $("#ToApp").on("click", function () { window.location.href = "/proceedToApp" })
+    $("#LogOut").on("click", function () {
+        localStorage.removeItem(USER_KEY); sessionStorage.removeItem(USER_KEY)
+        localStorage.removeItem(INDEX_KEY); sessionStorage.removeItem(INDEX_KEY)
+        window.location.replace("/")
+    })
+
+    LoadEverything()
+</script>
+</body>
+</html>

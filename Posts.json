@@ -1,0 +1,386 @@
+[
+  {
+    "title": "Welcome to Astrogram",
+    "text": "Hello! I'm AstroVoid24, nice to meet you! Of course, you know who I am! The CEO and the creator of this app! And this is the first post and this message is immortal! Even if the server's data would delete, but this won't happen in a 1000 years! Here is a random duck image: ",
+    "imagePath": [
+      "/post-images/p-0-0.webp"
+    ],
+    "owner": 1,
+    "tags": [
+      "first",
+      "astrovoid24",
+      "astrogram",
+      "cool",
+      "interesting",
+      "astro",
+      "duck"
+    ],
+    "like": [],
+    "dislike": [
+      6
+    ],
+    "reports": {}
+  },
+  {
+    "title": "FNAF всю ночь",
+    "text": "[Test Post] Привет! Я вчера играть FNAF всю ночь. Голден Фредди очень страшный, но я не боятся!! Мой русский плохой, извините 😅",
+    "imagePath": [],
+    "owner": 2,
+    "tags": [
+      "fnaf",
+      "freddy",
+      "russian"
+    ],
+    "like": [
+      1
+    ],
+    "dislike": [],
+    "reports": {}
+  },
+  {
+    "title": "Golden Freddy bilan raqs",
+    "text": "[Test Post] Golden Freddy bilan raqsga tushdim 💀 Hech kim ishonmaydi, lekin bu ROST. Menda video yo'q, lekin ishoning.",
+    "imagePath": [],
+    "owner": 2,
+    "tags": [
+      "fnaf",
+      "freddy",
+      "fazbear"
+    ],
+    "like": [
+      1
+    ],
+    "dislike": [],
+    "reports": {}
+  },
+  {
+    "title": "FNAF 2 haqida savol",
+    "text": "[Test Post] Kim FNAF 2 o'ynagan? Menimcha birinchisi qo'rqinchliroq. Fazbear pizza hech qachon ochilmasin!",
+    "imagePath": [],
+    "owner": 2,
+    "tags": [
+      "fnaf",
+      "fazbear"
+    ],
+    "like": [
+      1
+    ],
+    "dislike": [],
+    "reports": {}
+  },
+  {
+    "title": "Roblox eng zo'r!",
+    "text": "[Test Post] Roblox eng zo'r o'yin! Kim men bilan o'ynaydi? Yozing, birga o'ynaymiz 🎮",
+    "imagePath": [],
+    "owner": 3,
+    "tags": [
+      "roblox",
+      "rizo",
+      "best"
+    ],
+    "like": [
+      1
+    ],
+    "dislike": [],
+    "reports": {}
+  },
+  {
+    "title": "Yangi rekord!",
+    "text": "[Test Post] Bugun Robloxda yangi rekord qo'ydim. Rizo top 3000 — bu shunchaki nom emas, bu HAQIQAT 😎",
+    "imagePath": [],
+    "owner": 3,
+    "tags": [
+      "roblox",
+      "rizo",
+      "best"
+    ],
+    "like": [
+      1
+    ],
+    "dislike": [],
+    "reports": {}
+  },
+  {
+    "title": "FNAF yoki Roblox?",
+    "text": "[Test Post] Zubayerhon FNAF o'ynaydi, men Roblox. Qaysi biri zo'r? Menimcha javob aniq 😏",
+    "imagePath": [],
+    "owner": 3,
+    "tags": [
+      "roblox",
+      "fnaf",
+      "rizo"
+    ],
+    "like": [
+      1
+    ],
+    "dislike": [],
+    "reports": {}
+  },
+  {
+    "title": "PIKA PIKA!",
+    "text": "[Test Post] PIKA PIKA! ⚡ Pikachu is the best pokemon and nobody can change my mind.",
+    "imagePath": [],
+    "owner": 5,
+    "tags": [
+      "pokemon",
+      "pikachu"
+    ],
+    "like": [],
+    "dislike": [
+      1
+    ],
+    "reports": {}
+  },
+  {
+    "title": "Pokemon movie again",
+    "text": "[Test Post] Watched the first Pokemon movie again yesterday. Cried at the ending. Again. It never gets easier 😭",
+    "imagePath": [],
+    "owner": 5,
+    "tags": [
+      "pokemon",
+      "movie"
+    ],
+    "like": [],
+    "dislike": [
+      1
+    ],
+    "reports": {}
+  },
+  {
+    "title": "My top 5 pokemon",
+    "text": "[Test Post] My top 5 pokemon according to me:\n1. Pikachu\n2. Pikachu\n3. Pikachu\n4. Pika Pikachu\n5. Charsard\n\nVery Pika correct list ⚡⚡⚡⚡⚡⚡⚡⚡⚡⚡",
+    "imagePath": [],
+    "owner": 5,
+    "tags": [
+      "pokemon",
+      "pikachu",
+      "top5"
+    ],
+    "like": [],
+    "dislike": [
+      1
+    ],
+    "reports": {}
+  },
+  {
+    "title": "ASTROGRAM IS TRASH",
+    "text": "[Test Post] ASTROGRAM IS TRASH!!! Why do we need ONE MORE social app?? We already have enough! LET'S PROTEST!",
+    "imagePath": [],
+    "owner": 6,
+    "tags": [
+      "protest",
+      "astrogram"
+    ],
+    "like": [],
+    "dislike": [
+      1
+    ],
+    "reports": {}
+  },
+  {
+    "title": "Shut it down",
+    "text": "[Test Post] I demand the so called CEO to shut this down immediately. Nobody asked for Astrogram. NOBODY.",
+    "imagePath": [],
+    "owner": 6,
+    "tags": [
+      "protest"
+    ],
+    "like": [
+      6
+    ],
+    "dislike": [
+      1
+    ],
+    "reports": {}
+  },
+  {
+    "title": "You are all fools",
+    "text": "You are all fools",
+    "imagePath": [],
+    "owner": 4,
+    "tags": [
+      "fool",
+      "everybody",
+      "sus"
+    ],
+    "like": [
+      1
+    ],
+    "dislike": [],
+    "reports": {}
+  },
+  {
+    "title": "",
+    "text": "",
+    "imagePath": [],
+    "owner": 1,
+    "tags": [],
+    "like": [],
+    "dislike": [],
+    "reports": {},
+    "deleted": true
+  },
+  {
+    "title": "",
+    "text": "",
+    "imagePath": [],
+    "owner": 0,
+    "tags": [],
+    "like": [],
+    "dislike": [],
+    "reports": {},
+    "deleted": true
+  },
+  {
+    "title": "Salom hammaga!",
+    "text": "[Test Post] Salom hammaga! Men Zubayerhon. Bu mening birinchi postim! FNAF eng zo'r o'yin, hech kim men bilan bahslasha olmaydi. Freddy, Bonnie, Chica — hammasini bilaman. Kim men bilan o'ynaydi?",
+    "imagePath": [],
+    "owner": 2,
+    "tags": [
+      "fnaf",
+      "freddy",
+      "fazbear"
+    ],
+    "like": [
+      1
+    ],
+    "dislike": [],
+    "reports": {}
+  },
+  {
+    "title": "‎",
+    "text": "‎ ",
+    "imagePath": [],
+    "owner": 1,
+    "tags": [
+      "invisible",
+      "invisible-character",
+      "astrovoid24",
+      "cool",
+      "special"
+    ],
+    "like": [],
+    "dislike": [
+      6
+    ],
+    "reports": {}
+  },
+  {
+    "title": "Hello world",
+    "text": "I said Hello world",
+    "imagePath": [
+      "/post-images/p-17-0.jpg"
+    ],
+    "owner": 4,
+    "tags": [
+      "hello",
+      "world"
+    ],
+    "like": [],
+    "dislike": [],
+    "reports": {}
+  },
+  {
+    "title": "",
+    "text": "",
+    "imagePath": [],
+    "owner": 0,
+    "tags": [],
+    "like": [],
+    "dislike": [],
+    "reports": {},
+    "deleted": true
+  },
+  {
+    "title": "",
+    "text": "",
+    "imagePath": [],
+    "owner": 0,
+    "tags": [],
+    "like": [],
+    "dislike": [],
+    "reports": {},
+    "deleted": true
+  },
+  {
+    "title": "Tomorrow",
+    "text": "I'll start to make the trailer, video about this app, because the app is almost finished to be public!",
+    "imagePath": [],
+    "owner": 1,
+    "tags": [
+      "astrogram-trailer",
+      "astrovoid24",
+      "tomorrow",
+      "astrovoid24s-plans"
+    ],
+    "like": [
+      1
+    ],
+    "dislike": [],
+    "reports": {}
+  },
+  {
+    "title": "You found a gem",
+    "text": "I don't appear in the search but you found me, you may sub to me to see me after, but this is actually a bad idea, becuz who subscribes to me, IS BANNED!",
+    "imagePath": [
+      "/post-images/p-21-0.jpeg"
+    ],
+    "owner": 0,
+    "tags": [
+      "rare",
+      "leon",
+      "invisible",
+      "ban",
+      "admin"
+    ],
+    "like": [
+      0
+    ],
+    "dislike": [],
+    "reports": {}
+  },
+  {
+    "title": "",
+    "text": "",
+    "imagePath": [],
+    "owner": 0,
+    "tags": [],
+    "like": [],
+    "dislike": [],
+    "reports": {},
+    "deleted": true
+  },
+  {
+    "title": "",
+    "text": "",
+    "imagePath": [],
+    "owner": 0,
+    "tags": [],
+    "like": [],
+    "dislike": [],
+    "reports": {},
+    "deleted": true
+  },
+  {
+    "title": "",
+    "text": "",
+    "imagePath": [],
+    "owner": 0,
+    "tags": [],
+    "like": [],
+    "dislike": [],
+    "reports": {},
+    "deleted": true
+  },
+  {
+    "title": "",
+    "text": "",
+    "imagePath": [],
+    "owner": 0,
+    "tags": [],
+    "like": [],
+    "dislike": [],
+    "reports": {},
+    "deleted": true
+  }
+]

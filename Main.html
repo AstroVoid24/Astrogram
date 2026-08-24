@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#05051f">
+    <title>Astrogram</title>
+    <script src='https://code.jquery.com/jquery-4.0.0.js'></script>
+    <link rel="stylesheet" href="Main.css">
+</head>
+<body>
+
+<div id="stars"></div>
+<div id="stars2"></div>
+
+<!-- the strip that appears when you drag down from the top -->
+<div id="Pull"><span class="pull-ring"></span><span class="pull-text" data-i18n="pull">Pull to reload</span></div>
+
+<div id="TopBar">
+    <div class="brand">
+        <svg width="30" height="30" viewBox="0 0 60 60">
+            <g transform="rotate(-18 30 30)">
+                <ellipse cx="30" cy="30" rx="25" ry="6.5" fill="none" stroke="#a855f7" stroke-width="2.6"
+                         clip-path="url(#rb)" opacity=".85"/>
+                <circle cx="30" cy="30" r="14" fill="#1a1a4a" stroke="#a855f7" stroke-width="2.6"/>
+                <circle cx="26" cy="26" r="2.8" fill="#2d2d6b"/>
+                <ellipse cx="30" cy="30" rx="25" ry="6.5" fill="none" stroke="#c084fc" stroke-width="2.6"
+                         clip-path="url(#rf)"/>
+            </g>
+            <defs>
+                <clipPath id="rb"><rect x="0" y="0" width="60" height="30"/></clipPath>
+                <clipPath id="rf"><rect x="0" y="30" width="60" height="30"/></clipPath>
+            </defs>
+        </svg>
+        Astro<span class="accent">gram</span>
+    </div>
+
+    <button class="PageButton" data-page="Feed" data-i18n="feed">Feed</button>
+    <button class="PageButton" data-page="Search" data-i18n="search">Search</button>
+    <button class="PageButton" data-page="Chats" data-i18n="chats">Chats</button>
+    <button class="PageButton" data-page="Settings" data-i18n="settings">Settings</button>
+</div>
+
+<div id="Main">
+
+    <!-- ===================== FEED ===================== -->
+    <div id="PageFeed" class="Page">
+        <h1 class="PageTitle" data-i18n="feed">Feed</h1>
+        <p class="PageHint" data-i18n="feedHint">What everyone has been posting.</p>
+
+        <div id="FeedList">
+            <div class="feed-empty">
+                <span class="big">&#127756;</span>Loading...
+            </div>
+        </div>
+        <!-- scrolling this into view is what asks for the next 20 -->
+        <div id="FeedEnd"></div>
+    </div>
+
+    <!-- ============= ONE CONVERSATION ============= -->
+    <!-- not in the top bar, you get here from a chat row or an account -->
+    <div id="PageChat" class="Page">
+        <div class="chat-top">
+            <button id="ChatBack" aria-label="Back">&#8592;</button>
+            <div class="avatar small"><img id="ChatPicture" src="/resources/DefaultProfilePicture.png" alt=""></div>
+            <div class="chat-top-who">
+                <div class="chat-top-name" id="ChatName">&nbsp;</div>
+                <div class="chat-top-sub" id="ChatSub">&nbsp;</div>
+            </div>
+        </div>
+
+        <div id="ChatMessages"></div>
+
+        <div class="chat-send">
+            <input id="ChatInput" type="text" maxlength="500" data-i18n-ph="writeMessage" placeholder="Write a message..." autocomplete="off">
+            <button id="ChatSend" aria-label="Send">&#10148;</button>
+        </div>
+    </div>
+
+    <!-- ===================== SEARCH ===================== -->
+    <div id="PageSearch" class="Page">
+        <h1 class="PageTitle" data-i18n="search">Search</h1>
+        <p class="PageHint" data-i18n="searchHint">Find people on Astrogram.</p>
+
+        <div class="search-wrap">
+            <span class="glass">&#128269;</span>
+            <input id="SearchInput" type="search" autocomplete="off" data-i18n-ph="typeUsername" placeholder="Type a username...">
+            <button type="button" id="SearchClear" aria-label="Clear">&times;</button>
+        </div>
+
+        <!-- input first, then its label: the CSS lights the label up from the
+             checkbox next to it, and that only works forwards -->
+        <div class="search-filters">
+            <input id="IsVerified" type="checkbox"><label for="IsVerified" data-i18n="verified">Verified</label>
+            <input id="IsBanned" type="checkbox"><label for="IsBanned" data-i18n="banned">Banned</label>
+        </div>
+
+        <!-- results go in here — one .account-card per person found -->
+        <div id="SearchResults">
+            <div class="search-empty">
+                <span class="big">&#128101;</span>Start typing to find accounts
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================== CHATS ===================== -->
+    <div id="PageChats" class="Page">
+        <h1 class="PageTitle" data-i18n="chats">Chats</h1>
+        <p class="PageHint" data-i18n="chatsHint">Your conversations.</p>
+
+        <!-- the accounts you are subscribed to, filled by ShowFollowing() -->
+        <div id="FollowingList">
+            <div class="search-empty"><span class="spin"></span>Loading...</div>
+        </div>
+    </div>
+
+    <!-- ===================== PROFILE ===================== -->
+    <!-- ===================== SETTINGS ===================== -->
+    <div id="PageSettings" class="Page">
+        <h1 class="PageTitle" data-i18n="settings">Settings</h1>
+        <p class="PageHint" data-i18n="settingsHint">Your account and how the app looks.</p>
+
+        <div class="info-group">
+            <button class="action-row" id="GoProfile">
+                <span class="info-icon">&#128100;</span>
+                <span class="row-text">
+                    <span class="row-name" data-i18n="profile">Profile</span>
+                    <span class="row-sub" id="SettingsWho">&nbsp;</span>
+                </span>
+                <span class="row-arrow">&#8250;</span>
+            </button>
+            <button class="action-row" id="GoLanguage">
+                <span class="info-icon">&#127760;</span>
+                <span class="row-text">
+                    <span class="row-name" data-i18n="language">Language</span>
+                    <span class="row-sub" id="SettingsLang">&nbsp;</span>
+                </span>
+                <span class="row-arrow">&#8250;</span>
+            </button>
+        </div>
+    </div>
+
+    <div id="PageProfile" class="Page">
+        <button class="back-row" id="ProfileBack">
+            <span>&#8592;</span> <span data-i18n="settings">Settings</span>
+        </button>
+
+
+        <!-- picture, name, status -->
+        <div class="card profile-header">
+            <div class="avatar">
+                <img id="MyPicture" src="/resources/DefaultProfilePicture.png" alt="Profile picture">
+            </div>
+            <!-- what #ChangePicture clicks; a button cannot open a file dialog -->
+            <input type="file" id="PictureInput" accept="image/*" hidden>
+            <div class="profile-name-row">
+                <h2 class="profile-name" id="WhoAmI">Not logged in</h2>
+                <svg class="verified-tick" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M23 12l-2.44-2.79.34-3.69-3.61-.82-1.89-3.2L12 2.96 8.6 1.5 6.71 4.69 3.1 5.5l.34 3.7L1 12l2.44 2.79-.34 3.7 3.61.82L8.6 22.5l3.4-1.47 3.4 1.46 1.89-3.19 3.61-.82-.34-3.69L23 12zm-12.91 4.72l-3.8-3.81 1.48-1.48 2.32 2.33 5.85-5.87 1.48 1.48-7.33 7.35z"/>
+                </svg>
+            </div>
+            <p class="profile-status" id="MyStatus" data-i18n="online">online</p>
+            <!-- both are buttons so they can be clicked. Nothing is bound to
+                 them yet - #ShowSubscribers and #ShowSubscribed are yours. -->
+            <div class="sub-count">
+                <button id="ShowSubscribers" type="button" data-index="-1">
+                    <b id="MySubCount">0</b> <span data-i18n="subscribers">subscribers</span>
+                </button>
+                <span class="sub-dot">&middot;</span>
+                <button id="ShowSubscribed" type="button" data-index="-1">
+                    <b id="MySubscribedCount">0</b> <span data-i18n="subscribed">subscribed</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- the details, each row a value with what it is underneath -->
+        <div class="info-group">
+            <div class="title" data-i18n="info">Info</div>
+
+            <div class="info-row">
+                <div class="info-icon">&#9432;</div>
+                <div class="info-text">
+                    <div class="info-value empty" id="MyDesc">No bio yet</div>
+                    <div class="info-label" data-i18n="bio">Bio</div>
+                </div>
+            </div>
+
+            <div class="info-row">
+                <div class="info-icon">&#127993;</div>
+                <div class="info-text">
+                    <div class="info-value empty" id="MyTags">No interests yet</div>
+                    <div class="info-label" data-i18n="interests">What you want to see</div>
+                </div>
+            </div>
+
+            <div class="info-row">
+                <div class="info-icon">@</div>
+                <div class="info-text">
+                    <div class="info-value" id="MyUsername">—</div>
+                    <div class="info-label" data-i18n="username">Username</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- everything this account has posted -->
+        <div class="info-group">
+            <div class="title with-count">
+                Posts <span class="post-count" id="PostCount"></span>
+            </div>
+            <div id="MyPosts">
+                <div class="no-posts"><span class="big">&#128247;</span>Nothing posted yet</div>
+            </div>
+        </div>
+
+        <!-- rows that do something -->
+        <div class="info-group">
+            <div class="title" data-i18n="language">Language</div>
+            <div class="lang-row">
+                <button class="lang-pick" data-lang="en">English</button>
+                <button class="lang-pick" data-lang="ru">Русский</button>
+                <button class="lang-pick" data-lang="uz">O'zbekcha</button>
+            </div>
+        </div>
+
+        <div class="info-group" id="BottomElements">
+            <button class="action-row" id="EditProfile">
+                <span class="info-icon">&#9998;</span> Edit profile
+            </button>
+            <button class="action-row danger" id="LogOut">
+                <span class="info-icon">&#9099;</span> Log out
+            </button>
+        </div>
+
+    </div>
+
+</div>
+
+<!-- Bottom-right button. PageUpdate() swaps the icon and hides it where it
+     does not belong. -->
+<button id="ActionButton" aria-label="New">
+    <svg class="ico ico-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="2.4" stroke-linecap="round">
+        <line x1="12" y1="5" x2="12" y2="19"/>
+        <line x1="5" y1="12" x2="19" y2="12"/>
+    </svg>
+</button>
+
+<!-- MessageBubble() drops its bubbles in here -->
+<div id="BubbleStack"></div>
+
+<!-- type="module": Main.js has top-level await, which a classic script cannot
+     have. Bun used to bundle it into a module; nothing does that now. -->
+<script type="module" src="Main.js"></script>
+</body>
+</html>

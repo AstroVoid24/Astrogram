@@ -1,0 +1,344 @@
+[
+  {
+    "Username": "Admin",
+    "Password": "xddcc",
+    "level": "admin",
+    "posts": [
+      21
+    ],
+    "subscribers": [
+      6
+    ],
+    "tags": [
+      "admin",
+      "invisible",
+      "leon",
+      "cool"
+    ],
+    "picturePath": "",
+    "banReason": null,
+    "description": "Do NOT subscribe to me. Everyone who subscribes to this account gets banned, just for fun >:D (An easter egg of this app)",
+    "banned": false,
+    "messages": [
+      {
+        "init": "Yep",
+        "who": 0,
+        "to": 1,
+        "time": 1787321616344,
+        "seen": false,
+        "id": 8
+      },
+      {
+        "init": "You know the consequences",
+        "who": 0,
+        "to": 1,
+        "time": 1787321658941,
+        "seen": false,
+        "id": 10
+      }
+    ]
+  },
+  {
+    "Username": "AstroVoid24",
+    "Password": "I'm CEO",
+    "description": "Welcome to the Astrogram! I'm the creator and the CEO of this app, i post different updates about this app, and listen to your suggestions to make my app better and sometimes post interesting content!",
+    "banned": false,
+    "email": "saidumar.holmeer@gmail.com",
+    "level": "verified",
+    "posts": [
+      0,
+      16,
+      20
+    ],
+    "subscribers": [
+      2,
+      3,
+      4,
+      5
+    ],
+    "tags": [
+      "cosmos",
+      "astro",
+      "cats",
+      "elon-musk",
+      "space",
+      "ducks",
+      "astrogram",
+      "fnaf",
+      "roblox",
+      "duck",
+      "astrovoid24",
+      "interesting",
+      "sus",
+      "fazbear"
+    ],
+    "picturePath": "/user-images/u-1-8cd61400.png",
+    "banReason": null,
+    "messages": [
+      {
+        "init": "Helo",
+        "who": 1,
+        "to": 7,
+        "time": 1787209778028,
+        "seen": false,
+        "id": 1
+      },
+      {
+        "init": "Hi",
+        "who": 1,
+        "to": 0,
+        "time": 1787237919501,
+        "seen": false,
+        "id": 2
+      },
+      {
+        "init": "Are y admin",
+        "who": 1,
+        "to": 0,
+        "time": 1787237924509,
+        "seen": false,
+        "id": 3
+      },
+      {
+        "init": "Helllooooolllollololololololo",
+        "who": 1,
+        "to": 4,
+        "time": 1787251375758,
+        "seen": false,
+        "id": 7
+      },
+      {
+        "init": "Oh, can I sub to you?",
+        "who": 1,
+        "to": 0,
+        "time": 1787321633211,
+        "seen": false,
+        "id": 9
+      },
+      {
+        "init": "Fine",
+        "who": 1,
+        "to": 0,
+        "time": 1787321665059,
+        "seen": false,
+        "id": 11
+      },
+      {
+        "init": "Mama",
+        "who": 1,
+        "to": 7,
+        "time": 1787326102346,
+        "seen": false,
+        "id": 12
+      },
+      {
+        "init": "Aloo",
+        "who": 1,
+        "to": 7,
+        "time": 1787326107125,
+        "seen": false,
+        "id": 13
+      },
+      {
+        "init": "Ах Mamajan, я тебя люблю ❤️",
+        "who": 1,
+        "to": 7,
+        "time": 1787326161421,
+        "seen": false,
+        "id": 14
+      },
+      {
+        "init": "So, hello",
+        "who": 1,
+        "to": 4,
+        "time": 1787332859742,
+        "seen": false,
+        "id": 15
+      },
+      {
+        "init": "?",
+        "who": 1,
+        "to": 4,
+        "time": 1787332883157,
+        "seen": false,
+        "id": 16
+      },
+      {
+        "init": "Alooooooo",
+        "who": 1,
+        "to": 4,
+        "time": 1787332889542,
+        "seen": false,
+        "id": 17
+      },
+      {
+        "init": "ALOOOOO",
+        "who": 1,
+        "to": 4,
+        "time": 1787332894523,
+        "seen": false,
+        "id": 18
+      }
+    ]
+  },
+  {
+    "Username": "Dream130909",
+    "Password": "Dream130909 is the best",
+    "description": "[Test Post] Fnaf fan! I danced with golden feddy. Meni Zubayerhon deb chaqirishadi",
+    "banned": false,
+    "email": "jamesxplayer4@gmail.com",
+    "level": "verified",
+    "posts": [
+      1,
+      2,
+      3,
+      15
+    ],
+    "subscribers": [],
+    "tags": [
+      "astrovoid24",
+      "fnaf",
+      "freddy",
+      "fazbear"
+    ],
+    "picturePath": "",
+    "banReason": null,
+    "messages": []
+  },
+  {
+    "Username": "Rizo2424",
+    "Password": "Rizo top 3000",
+    "description": "[Test Post] Roblox is life",
+    "banned": false,
+    "email": "saidumarchik.h@gmail.com",
+    "level": "verified",
+    "posts": [
+      4,
+      5,
+      6
+    ],
+    "subscribers": [],
+    "tags": [
+      "astrovoid24",
+      "rizo",
+      "best",
+      "roblox"
+    ],
+    "picturePath": "",
+    "banReason": null,
+    "messages": []
+  },
+  {
+    "Username": "Azamatjon Polvon",
+    "Password": "Bitta$Parolda&endi",
+    "description": "I'm strong",
+    "banned": false,
+    "email": "saidumar.holmeer@gmail.com",
+    "level": "verified",
+    "posts": [
+      12,
+      17
+    ],
+    "subscribers": [
+      1
+    ],
+    "tags": [
+      "terrafull48",
+      "astro"
+    ],
+    "picturePath": "/user-images/u-4-2cf6d1a6.jpg",
+    "banReason": null,
+    "messages": [
+      {
+        "init": "Fulasigz",
+        "who": 4,
+        "to": 1,
+        "time": 1787251338858,
+        "seen": false,
+        "id": 6
+      }
+    ]
+  },
+  {
+    "Username": "Pickachu Pika Pika",
+    "Password": "PikaPika",
+    "description": "[Test Post] I love pikachuuuuu! Pokemon fan!",
+    "banned": false,
+    "email": "saidumar.holmeer@gmail.com",
+    "level": "user",
+    "posts": [
+      7,
+      8,
+      9
+    ],
+    "subscribers": [],
+    "tags": [
+      "pokemon",
+      "pikachu"
+    ],
+    "picturePath": "",
+    "banReason": null,
+    "messages": []
+  },
+  {
+    "Username": "Anti-Astrogram",
+    "Password": "Astrogram is Trash",
+    "description": "[Test Post] LET'S PROTEST THE ASTROGRAM",
+    "banned": true,
+    "email": "Aaaa@gmail.com",
+    "level": "user",
+    "posts": [
+      10,
+      11
+    ],
+    "subscribers": [],
+    "tags": [
+      "protest",
+      "trash"
+    ],
+    "picturePath": "",
+    "banReason": {
+      "top": "subscribing to the Admin, who told you not to",
+      "count": 0,
+      "others": []
+    },
+    "doomAt": 1786973233167,
+    "messages": []
+  },
+  {
+    "Username": "Noila",
+    "Password": "9999",
+    "description": "",
+    "banned": false,
+    "email": "А",
+    "level": "verified",
+    "posts": [],
+    "subscribers": [
+      1,
+      4
+    ],
+    "tags": [
+      "astrovoid24"
+    ],
+    "picturePath": "",
+    "banReason": null,
+    "messages": [
+      {
+        "init": "Salom",
+        "who": 7,
+        "to": 1,
+        "time": 1787209759287,
+        "seen": false,
+        "id": 0
+      },
+      {
+        "init": "Hdhdhs",
+        "who": 7,
+        "to": 1,
+        "time": 1787395969280,
+        "seen": false,
+        "id": 19
+      }
+    ]
+  }
+]
