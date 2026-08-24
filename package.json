@@ -1,0 +1,7 @@
+{
+  "name": "astrogram",
+  "private": true,
+  "scripts": {
+    "start": "bun server.js"
+  }
+}
