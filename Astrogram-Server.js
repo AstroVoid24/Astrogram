@@ -1,70 +1,45 @@
-//| ================= RUNS ON BUN AND ON DENO =================
-// The pages used to be imported, which let Bun bundle them. Deno has no bundler
-// and cannot import HTML at all, so they are plain files served as they are -
-// which also ends the trouble where Bun rewrote every src at build time.
-const IS_DENO = typeof Deno !== "undefined"
-// A named file, or Deno gives each script its own database and the importer
-// would write somewhere the server never looks. On Deno Deploy the name must be
-// left out - the platform supplies the database.
-const ON_DEPLOY = IS_DENO && !!Deno.env.get("DENO_DEPLOYMENT_ID")
-const kv = IS_DENO ? await Deno.openKv(ON_DEPLOY ? undefined : "./astrogram-kv.sqlite") : null
+//| ================= WHERE THE DATA LIVES =================
+// Render's free tier wipes the disk every time the service sleeps, so the two
+// lists live in Upstash Redis when its two env vars are set, and in the json
+// files next to this one when they are not (which is how it runs on your Mac).
+const REDIS_URL = process.env.UPSTASH_REDIS_REST_URL
+const REDIS_TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN
+const USE_REDIS = !!(REDIS_URL && REDIS_TOKEN)
 
-// ---- reading a file off disk ----
+async function RedisGet(key) {
+    const r = await fetch(`${REDIS_URL}/get/${key}`, {
+        headers: {Authorization: `Bearer ${REDIS_TOKEN}`}
+    })
+    if (!r.ok) throw new Error(`Redis get ${key}: ${r.status}`)
+    // Upstash answers {result: "<the string we stored>"} or {result: null}
+    const {result} = await r.json()
+    return result == null ? null : JSON.parse(result)
+}
+
+async function RedisSet(key, value) {
+    const r = await fetch(`${REDIS_URL}/set/${key}`, {
+        method: "POST",
+        headers: {Authorization: `Bearer ${REDIS_TOKEN}`},
+        body: JSON.stringify(value)
+    })
+    if (!r.ok) throw new Error(`Redis set ${key}: ${r.status}`)
+}
+
+// ---- files, for running here ----
 async function ReadBytes(path) {
     try {
-        if (IS_DENO) return await Deno.readFile(path)
         const f = Bun.file(path)
         return await f.exists() ? new Uint8Array(await f.arrayBuffer()) : null
     } catch (e) { return null }
 }
-async function WriteBytes(path, bytes) {
-    if (IS_DENO) {
-        await Deno.mkdir(path.split("/").slice(0, -1).join("/"), {recursive: true})
-        return await Deno.writeFile(path, bytes)
-    }
-    return await Bun.write(path, bytes)
-}
-async function RemoveFile(path) {
-    try { IS_DENO ? await Deno.remove(path) : await Bun.file(path).delete() }
-    catch (e) { }
-}
+async function WriteBytes(path, bytes) { return await Bun.write(path, bytes) }
+async function RemoveFile(path) { try { await Bun.file(path).delete() } catch (e) { } }
 
-// Deno Deploy has no writable disk, so the two lists live in Deno KV there and
-// in the json files here. Same shape either way, so nothing else changes.
-// A KV value can only hold 64KB, so a picture is cut into pieces. This is why
-// the size cap is far lower on Deno - see MAX_IMAGE below.
-const CHUNK = 60000
-async function SaveImage(path, bytes) {
-    if (!IS_DENO) return await WriteBytes(path, bytes)
-    const pieces = Math.ceil(bytes.length / CHUNK)
-    for (let i = 0; i < pieces; i++) {
-        await kv.set(["img", path, i], bytes.slice(i * CHUNK, (i + 1) * CHUNK))
-    }
-    await kv.set(["img", path, "pieces"], pieces)
-}
-async function ReadImage(path) {
-    if (!IS_DENO) return await ReadBytes(path)
-    const count = (await kv.get(["img", path, "pieces"])).value
-    if (!count) return null
-    let parts = []
-    for (let i = 0; i < count; i++) parts.push((await kv.get(["img", path, i])).value)
-    const total = parts.reduce((n, p) => n + p.length, 0)
-    const all = new Uint8Array(total)
-    let at = 0
-    for (const p of parts) { all.set(p, at); at += p.length }
-    return all
-}
-async function RemoveImage(path) {
-    if (!IS_DENO) return await RemoveFile(path)
-    const count = (await kv.get(["img", path, "pieces"])).value || 0
-    for (let i = 0; i < count; i++) await kv.delete(["img", path, i])
-    await kv.delete(["img", path, "pieces"])
-}
-
+//| ---- the two lists ----
 async function LoadJson(key, path) {
-    if (IS_DENO) {
-        const got = await kv.get([key])
-        if (got.value) return got.value
+    if (USE_REDIS) {
+        const got = await RedisGet(key)
+        if (got) return got
         throw new Error("nothing saved yet")     // the catch loads the defaults
     }
     const bytes = await ReadBytes(path)
@@ -72,8 +47,35 @@ async function LoadJson(key, path) {
     return JSON.parse(new TextDecoder().decode(bytes))
 }
 async function SaveJson(key, path, value) {
-    if (IS_DENO) return await kv.set([key], value)
+    if (USE_REDIS) return await RedisSet(key, value)
     return await WriteBytes(path, new TextEncoder().encode(JSON.stringify(value, null, 2)))
+}
+
+//| ---- pictures ----
+// Redis holds text, so a picture goes in as base64 under a key of its own.
+function ToBase64(bytes) {
+    let out = ""
+    for (const b of bytes) out += String.fromCharCode(b)
+    return btoa(out)
+}
+function FromBase64(text) {
+    const raw = atob(text)
+    const out = new Uint8Array(raw.length)
+    for (let i = 0; i < raw.length; i++) out[i] = raw.charCodeAt(i)
+    return out
+}
+async function SaveImage(path, bytes) {
+    if (!USE_REDIS) return await WriteBytes(path, bytes)
+    return await RedisSet("img:" + path.split("/").pop(), ToBase64(bytes))
+}
+async function ReadImage(path) {
+    if (!USE_REDIS) return await ReadBytes(path)
+    const text = await RedisGet("img:" + path.split("/").pop())
+    return text ? FromBase64(text) : null
+}
+async function RemoveImage(path) {
+    if (!USE_REDIS) return await RemoveFile(path)
+    return await RedisSet("img:" + path.split("/").pop(), "")
 }
 
 function PictureType(name) {
@@ -245,9 +247,9 @@ const PostsPath = "./Posts.json"
 const database = "."
 const POST_IMAGES = "./"      // what people attach to a post, named p-...
 const USER_IMAGES = "./"      // profile pictures, named u-...
-// 50MB is fine on a disk. On Deno the pictures go into KV in 60KB pieces, and
-// the free store is not big enough for that - shrink them in the browser first.
-const MAX_IMAGE = IS_DENO ? 2 * 1024 * 1024 : 50 * 1024 * 1024
+// A picture is stored as base64 text in Redis and Upstash will not take a big
+// one, so the cap drops right down there. Shrink pictures in the browser.
+const MAX_IMAGE = USE_REDIS ? 400 * 1024 : 50 * 1024 * 1024
 const MAX_IMAGES = 10                               // per post
 const DOOM_MIN_MS = 3000                // three seconds
 const DOOM_MAX_MS = 60 * 60 * 1000      // one hour
@@ -1489,11 +1491,24 @@ const routes = {
 //| ================= THE ROUTER =================
 // Bun understands a routes object on its own, Deno does not - it takes one
 // handler. So the matching is done here and both runtimes use the same table.
+// A sleeping service has no start up worth the name - it wakes, answers, and
+// forgets. So the two lists are fetched again on every api call rather than
+// once at the top. Doing it here means the 33 handlers below did not change;
+// they still read the same Users and PostsFeed.
+async function Refresh() {
+    if (!USE_REDIS) return          // the files on disk are already the truth
+    try { Users = await LoadJson("users", UsersPath) } catch (e) { }
+    try { PostsFeed = await LoadJson("posts", PostsPath) } catch (e) { }
+    RecoverMessageId()
+}
+
 async function Handle(req) {
     if (req.method === "OPTIONS") {
         return new Response("", {headers: corsHeaders, status: 204})
     }
     const path = new URL(req.url).pathname
+    // only the api needs the data - pages and pictures would waste two reads
+    if (path.startsWith("/api/")) await Refresh()
 
     let found = routes[path]
     if (!found) {
@@ -1525,14 +1540,10 @@ async function Handle(req) {
 
 // the host picks the port when this is deployed
 // Number() first, then check - "0" is a non-empty string and would sail past ||
-const GivenPort = Number(IS_DENO ? Deno.env.get("PORT") : process.env.PORT)
+const GivenPort = Number(process.env.PORT)
 const PORT = GivenPort > 0 ? GivenPort : 12345
 
-if (IS_DENO) {
-    Deno.serve({port: PORT}, Handle)
-} else {
-    Bun.serve({port: PORT, maxRequestBodySize: MAX_SIZE, fetch: Handle})
-}
-console.log(`Started server on ${PORT}` + (IS_DENO ? " with Deno" : " with Bun"))
+Bun.serve({port: PORT, maxRequestBodySize: MAX_SIZE, fetch: Handle})
+console.log(`Started server on ${PORT}, data in ` + (USE_REDIS ? "Upstash Redis" : "the json files beside me"))
 
 export {}   // no imports left, and this keeps it an ES module for top-level await
