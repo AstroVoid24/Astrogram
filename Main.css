@@ -753,7 +753,6 @@ body.on-chat #Pull { position: absolute; top: 0; left: 0; right: 0; z-index: 400
 }
 
 /* the language buttons on the profile */
-.lang-row { display: flex; gap: 8px; flex-wrap: wrap; padding: 4px 16px 16px; }
 .lang-pick {
     flex: 1; min-width: 90px; padding: 11px 14px;
     font-family: inherit; font-size: 13px; font-weight: 700;
@@ -1771,7 +1770,7 @@ body.on-chat #Pull { position: absolute; top: 0; left: 0; right: 0; z-index: 400
 .post-menu-btn {
     padding: 2px 9px;
     font-size: 20px; line-height: 1; font-family: inherit;
-    color: #6b6b95;
+    color: #9a9ac4;
     background: transparent; border: none; border-radius: 8px;
     cursor: pointer;
     transition: color .15s, background .15s;
@@ -1825,6 +1824,15 @@ body.on-chat #Pull { position: absolute; top: 0; left: 0; right: 0; z-index: 400
 
 
 .post-full-bar .feed-actions { padding: 4px 0 0; }
+/* next to the heart and the thumb, so it is shaped like them or it vanishes */
+.post-full-bar .post-menu { margin-top: 4px; }
+.post-full-bar .post-menu-btn {
+    padding: 7px 16px;
+    color: #c4b5fd;
+    background: rgba(10,10,46,.6);
+    border: 1px solid #34246b;
+    border-radius: 999px;
+}
 
 
 /* the menu would be cut off by the pop-up's own scrolling otherwise */
@@ -2135,6 +2143,9 @@ body.popup-open { overflow: hidden; }
     flex: 1; min-height: 0;                     /* min-height or flex will not scroll it */
     overflow-y: auto;
 }
+/* A box that scrolls also clips, and the ... menu opens outside its own row -
+   so while one is open the body stops clipping and the menu can be seen. */
+#PopupBox:has(.post-menu.open) #PopupBody { overflow: visible; }
 #PopupClose {
     position: absolute; top: 10px; right: 12px; z-index: 3;
     background: transparent; border: none; color: #6b7280;
@@ -2233,6 +2244,11 @@ body.popup-open { overflow: hidden; }
    to really press it. Behind this query a touch screen never sees them. */
 
 @media (hover: hover) and (pointer: fine) {
+    .post-full-bar .post-menu-btn:hover {
+        color: #fff; border-color: #a855f7;
+        background: rgba(168,85,247,.16);
+        box-shadow: 0 0 14px rgba(168,85,247,.3);
+    }
     .back-row:hover { color: #c4b5fd; border-color: #a855f7; }
     .lang-pick:hover { border-color: #a855f7; color: #e0e0ff; }
     .lang-pick:hover { color: #e0e0ff; border-color: #a855f7; background: rgba(168,85,247,.14); }

@@ -565,7 +565,7 @@ function DrawMessages(list) {
     let out = ""
     for (const m of list) {
         out += `<div class="bubble ${Number(m.who) === myIndex ? "mine" : "theirs"}" data-id="${m.id}">` +
-                   `<span class="bubble-text">${Escape(urlify(m.init))}</span>` +
+                   `<span class="bubble-text" translate="no">${Escape(urlify(m.init))}</span>` +
                    `<span class="bubble-time">${MessageTime(m.time)}</span>` +
                `</div>`
     }
@@ -925,7 +925,7 @@ async function SendReport(id, reason) {
 
 //| ====== MESSAGE BUBBLE ====== |\\
 
-function MessageBubble(text, html, width, height, autoClose = true) {
+function MessageBubble(text, html = "", width = 0, height = 0, autoClose = true) {
     const bubble = $(
         `<div class="msg-bubble">` +
             `<button class="msg-close" aria-label="Close">&times;</button>` +
@@ -1029,7 +1029,7 @@ function FeedCard(post) {
                    `</div>` +
                    `<div class="feed-who">` +
                        `<div class="feed-name">` +
-                           `<span class="feed-nick">${name}</span>` +
+                           `<span class="feed-nick" translate="no">${name}</span>` +
                            VERIFIED_TICK +
                            `<span class="feed-banned">Banned</span>` +
                        `</div>` +
@@ -1037,8 +1037,8 @@ function FeedCard(post) {
                    `</div>` +
                    PostMenu(post) +
                `</div>` +
-               (post.title ? `<div class="feed-title">${post.title}</div>` : "") +
-               `<div class="feed-text">${post.text || "<i>empty post</i>"}</div>` +
+               (post.title ? `<div class="feed-title" translate="no">${post.title}</div>` : "") +
+               `<div class="feed-text" translate="no">${post.text || "<i>empty post</i>"}</div>` +
                picture +
                tags +
                buttons +
@@ -1385,7 +1385,7 @@ $("body").on("click", "#SaveProfile", async function () {
         // The server says which outcome it was through the status code
         if (response.status === 200) {
             await showMyInfo()
-            OpenPopup("✅", "Successfully edited your account!")
+            MessageBubble("Edited")
         }
         else if (response.status === 201) {
             OpenPopup("&#128683;", `Something is wrong, somehow, your account doesn't exists`);
@@ -1691,7 +1691,7 @@ async function ShowFullPost(post, who, backTo) {
         post.title ? post.title : (who ? who : "Post"),
         who && post.title ? who : "", "",
         `<div class="post-full">` +
-            `<div class="post-full-text">${post.text || "<i>empty post</i>"}</div>` +
+            `<div class="post-full-text" translate="no">${post.text || "<i>empty post</i>"}</div>` +
             picture +
             tags +
             `<div class="post-full-bar">${LikeButtons(post)}${PostMenu(post)}</div>` +
