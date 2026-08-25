@@ -85,9 +85,12 @@ function PictureType(name) {
 const TYPES = {html: "text/html;charset=utf-8", css: "text/css;charset=utf-8",
     js: "text/javascript;charset=utf-8", json: "application/json",
     png: "image/png", jpg: "image/jpeg", jpeg: "image/jpeg", webp: "image/webp",
-    gif: "image/gif", svg: "image/svg+xml", ico: "image/x-icon"}
+    gif: "image/gif", svg: "image/svg+xml", ico: "image/x-icon",
+    mp4: "video/mp4", webm: "video/webm", mov: "video/quicktime", ogv: "video/ogg"}
 
-const PICTURE_TYPES = ["png", "jpg", "jpeg", "webp", "gif", "svg", "ico"]
+// what a post may carry, and therefore what the picture routes may hand out
+const PICTURE_TYPES = ["png", "jpg", "jpeg", "webp", "gif", "svg", "ico",
+                       "mp4", "webm", "mov", "ogv"]
 // The files are beside the server now, so a picture route pointed at anything
 // else would happily hand out Users.json or this very file.
 function IsPicture(name) {
@@ -220,10 +223,11 @@ let PostsFeed = [
     }
 ]
 class PostFeed {
-    constructor(text, imagePath = [], owner, tags = [], title = "") {
+    constructor(text, imagePath = [], owner, tags = [], title = "", files = []) {
         this.title = title
         this.text = text
         this.imagePath = imagePath      // URLs like /post-images/p-3-0.png, [] when none
+        this.files = files              // anything else: [{url, name, size}]
         this.owner = owner
         this.tags = tags
         this.like = []          // who liked it
@@ -353,9 +357,20 @@ function RecoverMessageId() {
 // zone of the let above, threw, and the catch reported the files as missing.
 RecoverMessageId()
 
+// Every write is chained onto the last one, so two saves cannot interleave and
+// Refresh() can wait for whatever is still in the air. Writing to Redis takes a
+// round trip, and the 22 places that call this do not await it - so without the
+// chain the next request would read Redis back before the write had landed and
+// quietly undo it.
+let Saving = Promise.resolve()
 function saveData() {
-    SaveJson("users", UsersPath, Users)
-    SaveJson("posts", PostsPath, PostsFeed)
+    Saving = Saving
+        .then(async () => {
+            await SaveJson("users", UsersPath, Users)
+            await SaveJson("posts", PostsPath, PostsFeed)
+        })
+        .catch(e => console.log("Could not save:", e.message))
+    return Saving
 }
 let EmailVerifiers = []
 const CODE_LIFETIME = ToMinutes(10)   // codes stop working after 10 minutes
@@ -483,6 +498,22 @@ const routes = {
             const bytes = await ReadImage(USER_IMAGES + name)
             if (!bytes) return new Response("No such file", {headers: corsHeaders, status: 404})
             return new Response(bytes, {headers: {...corsHeaders, "Content-Type": PictureType(name)}})
+        },
+        // Anything that is not a picture or a video. Always sent as a download:
+        // an .html or .js served inline would run on this very origin and could
+        // read whoever opened it right out of localStorage.
+        '/post-file/:file': async req => {
+            const name = req.params.file.split("/").pop()
+            if (!name.startsWith("p-")) {
+                return new Response("No", {headers: corsHeaders, status: 403})
+            }
+            const bytes = await ReadImage(POST_IMAGES + name)
+            if (!bytes) return new Response("No such file", {headers: corsHeaders, status: 404})
+            const asked = new URL(req.url).searchParams.get("name") || name
+            return new Response(bytes, {headers: {...corsHeaders,
+                "Content-Type": "application/octet-stream",
+                "Content-Disposition": `attachment; filename="${asked.replace(/[^\w.\- ]/g, "_")}"`,
+                "X-Content-Type-Options": "nosniff"}})
         },
         // Pictures people attached to their posts
         '/post-images/:file': async req => {
@@ -737,22 +768,31 @@ const routes = {
                 if (files.length > MAX_IMAGES) {
                     return new Response(`No more than ${MAX_IMAGES} images`, {headers: corsHeaders, status: 413})
                 }
+                let FileList = []
+                let n = 0
                 for (const file of files) {
                     if (!file || typeof file === "string" || file.size === 0) continue
-                    if (!file.type.startsWith("image/")) {
-                        return new Response("That is not an image", {headers: corsHeaders, status: 415})
-                    }
                     if (file.size > MAX_IMAGE) {
-                        return new Response(`"${file.name}" is bigger than 50 MB`, {headers: corsHeaders, status: 413})
+                        return new Response(`"${file.name}" is too big`, {headers: corsHeaders, status: 413})
                     }
-                    const ext = (file.name || "").split(".").pop().toLowerCase() || "png"
+                    const shown = file.type.startsWith("image/") || file.type.startsWith("video/")
+                    const ext = (file.name || "").split(".").pop().toLowerCase() || "bin"
                     // the position in the post keeps them apart from each other
-                    const saved = "p-" + PostIndex + "-" + ImageUrls.length + "." + ext
+                    const saved = "p-" + PostIndex + "-" + (n++) + "." + ext
                     await SaveImage(POST_IMAGES + saved, new Uint8Array(await file.arrayBuffer()))
-                    ImageUrls.push("/post-images/" + saved)
-                    console.log("Saved the picture as", saved, `(${file.size} bytes)`)
+
+                    if (shown) {
+                        ImageUrls.push("/post-images/" + saved)
+                        console.log("Saved the picture as", saved, `(${file.size} bytes)`)
+                    } else {
+                        // the name they chose is kept, so the download is not called p-3-1.bin
+                        FileList.push({url: "/post-file/" + saved,
+                                       name: (file.name || saved).split("/").pop(),
+                                       size: file.size})
+                        console.log("Saved the file as", saved, `(${file.name}, ${file.size} bytes)`)
+                    }
                 }
-                let newPost = new PostFeed(Text, ImageUrls, UserIndex, Tags, Title)
+                let newPost = new PostFeed(Text, ImageUrls, UserIndex, Tags, Title, FileList)
                 console.log(`New post from ${Users[UserIndex].Username}! And the user posted this shit:`, newPost)
                 PostsFeed.push(newPost)
                 Users[UserIndex].posts.push(PostIndex)
@@ -1497,6 +1537,7 @@ const routes = {
 // they still read the same Users and PostsFeed.
 async function Refresh() {
     if (!USE_REDIS) return          // the files on disk are already the truth
+    await Saving                    // never read back over a write still going out
     try { Users = await LoadJson("users", UsersPath) } catch (e) { }
     try { PostsFeed = await LoadJson("posts", PostsPath) } catch (e) { }
     RecoverMessageId()

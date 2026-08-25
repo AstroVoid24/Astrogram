@@ -1428,6 +1428,25 @@ body.on-chat #Pull { position: absolute; top: 0; left: 0; right: 0; z-index: 400
 
 
 
+/* files attached to a post, each a row you can download */
+.file-stack { display: flex; flex-direction: column; gap: 7px; margin-bottom: 14px; padding: 0 18px; }
+.file-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 11px 14px;
+    text-decoration: none;
+    background: rgba(10,10,46,.6);
+    border: 1px solid #34246b; border-radius: 11px;
+    transition: border-color .18s, background .18s;
+}
+.file-icon { font-size: 19px; flex: none; }
+.file-what { flex: 1; min-width: 0; }
+.file-name {
+    display: block; font-size: 14px; font-weight: 600; color: #e0e0ff;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.file-size { display: block; font-size: 11.5px; color: #7a7a9e; margin-top: 1px; }
+.file-get { flex: none; font-size: 16px; color: #a855f7; }
+
 /* the pictures on a post, one under the other */
 .image-stack { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
 
@@ -1450,6 +1469,18 @@ body.on-chat #Pull { position: absolute; top: 0; left: 0; right: 0; z-index: 400
 }
 
 
+
+/* a video fills the slot like a picture, but keeps its own controls */
+.image-slot video {
+    width: 100%;
+    max-height: 70vh;
+    display: block;
+    border-radius: 10px;
+    border: 1px solid rgba(75,0,130,.7);
+    background: #05051f;
+}
+/* the counter would sit over the controls */
+.image-slot:has(video) .image-num { top: 9px; }
 
 /* 1/3, 2/3 ... only when there is more than one */
 .image-num {
@@ -2244,6 +2275,7 @@ body.popup-open { overflow: hidden; }
    to really press it. Behind this query a touch screen never sees them. */
 
 @media (hover: hover) and (pointer: fine) {
+    .file-row:hover { border-color: #a855f7; background: rgba(168,85,247,.12); }
     .post-full-bar .post-menu-btn:hover {
         color: #fff; border-color: #a855f7;
         background: rgba(168,85,247,.16);

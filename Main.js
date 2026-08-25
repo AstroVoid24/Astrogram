@@ -1040,6 +1040,7 @@ function FeedCard(post) {
                (post.title ? `<div class="feed-title" translate="no">${post.title}</div>` : "") +
                `<div class="feed-text" translate="no">${post.text || "<i>empty post</i>"}</div>` +
                picture +
+               FileStack(post.files) +
                tags +
                buttons +
            `</article>`
@@ -1062,13 +1063,48 @@ function RememberPost(post) {
 
 // Every picture on a post, each the full width and as tall as it is wide.
 // A lone one gets no counter, several get 1/3, 2/3 and so on.
+// Anything that is not a picture or a video is shown as a row you can download.
+function NiceSize(bytes) {
+    if (bytes < 1024) return bytes + " B"
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(0) + " KB"
+    return (bytes / 1024 / 1024).toFixed(1) + " MB"
+}
+
+function FileStack(files) {
+    const list = Array.isArray(files) ? files : []
+    if (!list.length) return ""
+    return `<div class="file-stack">` +
+        list.map(f =>
+            // download= makes the browser save it instead of trying to show it,
+            // and ?name= keeps the name they gave it
+            `<a class="file-row" href="${f.url}?name=${encodeURIComponent(f.name)}" download="${f.name}">` +
+                `<span class="file-icon">&#128206;</span>` +
+                `<span class="file-what">` +
+                    `<span class="file-name" translate="no">${Escape(f.name)}</span>` +
+                    `<span class="file-size">${NiceSize(f.size || 0)}</span>` +
+                `</span>` +
+                `<span class="file-get">&#11015;</span>` +
+            `</a>`
+        ).join("") +
+    `</div>`
+}
+
+const VIDEO_KINDS = ["mp4", "webm", "mov", "ogv"]
+function IsVideo(src) {
+    return VIDEO_KINDS.includes((src || "").split("?")[0].split(".").pop().toLowerCase())
+}
+
 function ImageStack(paths, cls) {
     const list = Array.isArray(paths) ? paths : (paths ? [paths] : [])
     if (!list.length) return ""
     return `<div class="image-stack">` +
         list.map((src, i) =>
             `<div class="image-slot">` +
-                `<img class="${cls}" src="${src}" alt="">` +
+                (IsVideo(src)
+                    // no cls on a video: that class is what opens the big picture
+                    // viewer, and a video needs its own clicks for the controls
+                    ? `<video class="post-video" src="${src}" controls preload="metadata" playsinline></video>`
+                    : `<img class="${cls}" src="${src}" alt="">`) +
                 (list.length > 1 ? `<span class="image-num">${i + 1}/${list.length}</span>` : "") +
             `</div>`
         ).join("") +
@@ -1467,8 +1503,8 @@ $("#ActionButton").on("click", function () {
             "<label for='PostTags'>Tags</label>" +
             "<input id='PostTags' type='text' placeholder='space, duck, cool'>" +
             "<p class='post-hint'>At least one tag is needed. Separate them with a comma. Spaces are removed automatically \u2014 use '-' if you want a gap.</p>" +
-            "<label for='imageAttachToPost'>Attach images <span class='optional'>(optional, up to 10)</span></label>" +
-            "<input type='file' id='imageAttachToPost' accept='image/*' multiple>" +
+            "<label for='imageAttachToPost'>Attach photos, video or files <span class='optional'>(optional, up to 10)</span></label>" +
+            "<input type='file' id='imageAttachToPost' multiple>" +
             "<button id='ToPostButton'>Post!</button>"
         )
     }
@@ -1499,8 +1535,8 @@ $("body").on("click", "#ToPostButton", async function () {
             "<label for='PostTags'>Tags</label>" +
             "<input id='PostTags' type='text' placeholder='space, duck, cool'>" +
             "<p class='post-hint'>At least one tag is needed. Separate them with a comma. Spaces are removed automatically \u2014 use '-' if you want a gap.</p>" +
-            "<label for='imageAttachToPost'>Attach images <span class='optional'>(optional, up to 10)</span></label>" +
-            "<input type='file' id='imageAttachToPost' accept='image/*' multiple>" +
+            "<label for='imageAttachToPost'>Attach photos, video or files <span class='optional'>(optional, up to 10)</span></label>" +
+            "<input type='file' id='imageAttachToPost' multiple>" +
             "<button id='ToPostButton'>Post!</button>"
         )
         return
@@ -1693,6 +1729,7 @@ async function ShowFullPost(post, who, backTo) {
         `<div class="post-full">` +
             `<div class="post-full-text" translate="no">${post.text || "<i>empty post</i>"}</div>` +
             picture +
+            FileStack(post.files) +
             tags +
             `<div class="post-full-bar">${LikeButtons(post)}${PostMenu(post)}</div>` +
         `</div>`,
