@@ -258,8 +258,9 @@ let me = localStorage.getItem(USER_KEY) || sessionStorage.getItem(USER_KEY);
 let myIndex = Number(localStorage.getItem(INDEX_KEY) ?? sessionStorage.getItem(INDEX_KEY));
 
 if (!me) {
-    // "/" is the login page. link is "/api", which is not a page at all - going
-    // there lands on "Invalid Path!".
+    // Whatever else is true, there is nobody here - so the cookie that told "/"
+    // otherwise has to go, or it sends us straight back and the page loops.
+    document.cookie = "astrogram-in=; path=/; max-age=0";
     // The #post= or #account= is kept, or it would be lost on the way to login.
     if (window.location.hash) localStorage.setItem("astrogram-goto", window.location.hash);
     window.location.replace("/")
@@ -944,14 +945,25 @@ function MessageBubble(text, html = "", width = 0, height = 0, autoClose = true)
             (html || "") +
         `</div>`
     )
-    if (width !== undefined || width !== "" || width !== 0) {
+    // && , not || . With || any value passes: 0 is not undefined, so the test
+    // was true even for the default - every bubble got height: 0vh and a
+    // scrollbar, which is why they came out squashed and empty looking.
+    if (width !== undefined && width !== "" && width !== 0) {
         bubble.css({ width: width + "vw", maxWidth: "calc(100vw - 32px)" })
     }
-    if (height !== undefined || height !== "" || height !== 0) {
+    if (height !== undefined && height !== "" && height !== 0) {
         bubble.css({ height: height + "vh", maxHeight: "calc(100dvh - 32px)", overflowY: "auto" })
     }
     $("#BubbleStack").append(bubble)
-    if (autoClose) setTimeout(function () {CloseBubbles()}, 2000)
+    // this one only. CloseBubbles() wiped every bubble on screen, including
+    // ones raised a moment ago that had not been read yet.
+    if (autoClose) setTimeout(function () {
+        bubble.addClass("going")
+        setTimeout(() => bubble.remove(), 200)
+    }, 5000)
+    // and never let them stack past four
+    const all = $("#BubbleStack .msg-bubble")
+    if (all.length > 4) all.slice(0, all.length - 4).remove()
     return bubble          // so the caller can keep hold of it and remove it later
 }
 function CloseBubbles() { $("#BubbleStack").empty() }
