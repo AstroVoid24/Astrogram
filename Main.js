@@ -94,8 +94,11 @@ function PictureOf(index) {
     return (at !== -1 && PicturesForSearch[at]) ? PicturesForSearch[at] : DEFAULT_PICTURE
 }
 
-const MAX_IMAGES = 10
-const MAX_IMAGE = 50 * 1024 * 1024      // 50 MB, same as the server
+// Only a guess until /users answers - the real numbers come from the server,
+// because they change with where the data is kept (a disk allows far more than
+// Redis does) and guessing wrong means a 413 the page cannot explain.
+let MAX_IMAGES = 10
+let MAX_IMAGE = 400 * 1024
 
 // What I have pressed, and how many likes each post has. The post objects
 // sitting in the lists are a snapshot from when they were fetched, so on
@@ -268,6 +271,11 @@ let UsersLoaded = (async function () {
         IndexesForSearch = answer.Indexes || []
         LevelsForSearch = answer.Levels || []
         PicturesForSearch = answer.Pictures || []
+        if (answer.maxImage) MAX_IMAGE = answer.maxImage
+        if (answer.maxImages) MAX_IMAGES = answer.maxImages
+        // aim a little under whatever it will take
+        AIM_FOR = Math.min(AIM_FOR, Math.floor(MAX_IMAGE * 0.75))
+        console.log(`server takes ${MAX_IMAGES} files, ${(MAX_IMAGE/1024).toFixed(0)}KB each`)
         console.log(UsernamesForSearch)
     }
     catch (error) {
@@ -1068,7 +1076,7 @@ function RememberPost(post) {
 // sane size and saved as webp, the same picture is usually 60-200 KB and looks
 // no different on a screen.
 const SHRINK_TO = 1280          // longest side, in pixels
-const AIM_FOR = 300 * 1024      // keep trying until it is under this
+let AIM_FOR = 300 * 1024        // keep trying until it is under this
 
 function ShrinkImage(file) {
     return new Promise(resolve => {

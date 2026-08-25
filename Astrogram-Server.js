@@ -745,7 +745,11 @@ const routes = {
                     // positions here stop matching, so the true index travels along.
                     Indexes.push(i)
                 }
-                return Response.json({Usernames, Banned, Indexes, Levels, Pictures}, {headers: corsHeaders, status: 200})
+                // the page needs to know what it may send, or it offers to upload
+                // things this will only turn away with a 413
+                return Response.json({Usernames, Banned, Indexes, Levels, Pictures,
+                    maxImage: MAX_IMAGE, maxImages: MAX_IMAGES},
+                    {headers: corsHeaders, status: 200})
             }
         },
         '/api/post-feed': {
