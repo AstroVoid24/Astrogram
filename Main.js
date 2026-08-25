@@ -1962,6 +1962,7 @@ $("body").on("click", ".post-delete", function () {
     TakePostsOff(id)
 
     let Countdown = 10
+    CloseBubbles()
     DeleteBubble = MessageBubble("Deleting your post in",
         `<p class="delete-countdown"><b id="DeleteCountdown">10</b> seconds</p>` +
         `<button id="DeletePostCancel">Cancel</button>`,
