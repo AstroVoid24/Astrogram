@@ -1155,7 +1155,10 @@ function ShrinkVideo(file) {
                 pen.drawImage(video, 0, 0, w, h)
                 requestAnimationFrame(draw)
             }
-            video.onended = () => recorder.state !== "inactive" && recorder.stop()
+            const stop = () => recorder.state !== "inactive" && recorder.stop()
+            video.onended = stop
+            // belt and braces: if the video never says it ended, stop anyway
+            setTimeout(stop, Math.min(120000, (video.duration || 15) * 1500 + 5000))
             recorder.start()
             video.play().then(draw).catch(() => { recorder.stop(); resolve(file) })
         }
@@ -1163,18 +1166,53 @@ function ShrinkVideo(file) {
     })
 }
 
+// Never let this wait for ever. Every one of these steps is a browser API that
+// answers with an event, and an event that never arrives is a page that never
+// posts - which is exactly what happened: no error, no request, just waiting.
+function GiveUpAfter(promise, ms, fallback, why) {
+    return Promise.race([
+        promise,
+        new Promise(resolve => setTimeout(() => {
+            console.log(`shrinking gave up after ${ms}ms (${why}), sending the original`)
+            resolve(fallback)
+        }, ms))
+    ])
+}
+
 // what the post handler calls
 async function Shrink(file, onProgress) {
     try {
         if (file.type.startsWith("image/") && file.type !== "image/gif") {
-            return await ShrinkImage(file)
+            console.log(`shrinking ${file.name} (${(file.size / 1024).toFixed(0)}KB)`)
+            const out = await GiveUpAfter(ShrinkImage(file), 15000, file, "picture")
+            console.log(`  -> ${(out.size / 1024).toFixed(0)}KB`)
+            return out
         }
         if (file.type.startsWith("video/")) {
             if (onProgress) onProgress(file.name)
-            return await ShrinkVideo(file)
+            console.log(`shrinking video ${file.name} (${(file.size / 1024 / 1024).toFixed(1)}MB)`)
+            // recording happens in real time, so allow the clip's own length and
+            // a bit over - but never more than two minutes of waiting
+            const seconds = await VideoLength(file)
+            const wait = Math.min(120000, Math.round(seconds * 1500) + 10000)
+            const out = await GiveUpAfter(ShrinkVideo(file), wait, file, "video")
+            console.log(`  -> ${(out.size / 1024 / 1024).toFixed(2)}MB`)
+            return out
         }
     } catch (e) { console.log("could not shrink", file.name, e) }
     return file          // anything else goes as it is
+}
+
+// how long a clip is, so the wait above can be sized to it
+function VideoLength(file) {
+    return new Promise(resolve => {
+        const v = document.createElement("video")
+        const done = secs => { URL.revokeObjectURL(v.src); resolve(secs) }
+        v.onloadedmetadata = () => done(isFinite(v.duration) ? v.duration : 15)
+        v.onerror = () => done(15)
+        setTimeout(() => done(15), 4000)      // even this can hang
+        v.src = URL.createObjectURL(file)
+    })
 }
 
 // Anything that is not a picture or a video is shown as a row you can download.
@@ -1681,10 +1719,18 @@ $("body").on("click", "#ToPostButton", async function () {
         data.append("post", JSON.stringify({                         // everything else
             index: myIndex, title: Title, text: Text, tags: Tags
         }))
-        const response = await fetch(link + "/post-feed", {
-            method: "POST",
-            body: data
-        });
+        // A fetch waits for ever by default. On a phone that has wandered off
+        // the wifi that means a button stuck on "Posting..." with no error.
+        const giveUp = new AbortController()
+        const timer = setTimeout(() => giveUp.abort(), 120000)
+        let response
+        try {
+            response = await fetch(link + "/post-feed", {
+                method: "POST",
+                body: data,
+                signal: giveUp.signal
+            });
+        } finally { clearTimeout(timer) }
 
         // The server says which outcome it was through the status code
         if (response.status === 200) {
