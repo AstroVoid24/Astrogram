@@ -1063,6 +1063,112 @@ function RememberPost(post) {
 
 // Every picture on a post, each the full width and as tall as it is wide.
 // A lone one gets no counter, several get 1/3, 2/3 and so on.
+//| ====== MAKING THINGS SMALLER BEFORE THEY GO UP ====== |\\
+// A phone photo is 3-6 MB and Redis will not take it. Drawn into a canvas at a
+// sane size and saved as webp, the same picture is usually 60-200 KB and looks
+// no different on a screen.
+const SHRINK_TO = 1280          // longest side, in pixels
+const AIM_FOR = 300 * 1024      // keep trying until it is under this
+
+function ShrinkImage(file) {
+    return new Promise(resolve => {
+        const img = new Image()
+        img.onload = function () {
+            let w = img.width, h = img.height
+            if (w > h && w > SHRINK_TO) { h = Math.round(h * SHRINK_TO / w); w = SHRINK_TO }
+            else if (h >= w && h > SHRINK_TO) { w = Math.round(w * SHRINK_TO / h); h = SHRINK_TO }
+
+            const canvas = document.createElement("canvas")
+            canvas.width = w; canvas.height = h
+            canvas.getContext("2d").drawImage(img, 0, 0, w, h)
+            URL.revokeObjectURL(img.src)
+
+            // drop the quality step by step until it fits, rather than guessing once
+            const tries = [0.82, 0.7, 0.6, 0.5, 0.4]
+            let at = 0
+            const attempt = () => canvas.toBlob(blob => {
+                if (!blob) return resolve(file)              // canvas refused, send the original
+                if (blob.size <= AIM_FOR || at >= tries.length - 1) {
+                    const name = file.name.replace(/\.[^.]+$/, "") + ".webp"
+                    resolve(new File([blob], name, {type: "image/webp"}))
+                    return
+                }
+                at++; attempt()
+            }, "image/webp", tries[at])
+            attempt()
+        }
+        img.onerror = () => resolve(file)                    // not really a picture, leave it
+        img.src = URL.createObjectURL(file)
+    })
+}
+
+// Video is the hard one. There is no real encoder in a browser, so the only way
+// is to play it into a canvas and record that - which happens in real time, a
+// 30 second clip takes 30 seconds. It is best effort: if anything goes wrong the
+// original comes back and the size check further down will complain about it.
+function ShrinkVideo(file) {
+    return new Promise(resolve => {
+        if (!window.MediaRecorder || !HTMLCanvasElement.prototype.captureStream) {
+            return resolve(file)                             // this browser cannot
+        }
+        const video = document.createElement("video")
+        video.muted = true
+        video.playsInline = true
+        video.src = URL.createObjectURL(file)
+
+        video.onloadedmetadata = function () {
+            let w = video.videoWidth, h = video.videoHeight
+            const SIDE = 720
+            if (w > h && w > SIDE) { h = Math.round(h * SIDE / w); w = SIDE }
+            else if (h >= w && h > SIDE) { w = Math.round(w * SIDE / h); h = SIDE }
+
+            const canvas = document.createElement("canvas")
+            canvas.width = w; canvas.height = h
+            const pen = canvas.getContext("2d")
+
+            const stream = canvas.captureStream(24)
+            let recorder
+            try { recorder = new MediaRecorder(stream, {mimeType: "video/webm", videoBitsPerSecond: 600000}) }
+            catch (e) { URL.revokeObjectURL(video.src); return resolve(file) }
+
+            const bits = []
+            recorder.ondataavailable = e => { if (e.data.size) bits.push(e.data) }
+            recorder.onstop = function () {
+                URL.revokeObjectURL(video.src)
+                const blob = new Blob(bits, {type: "video/webm"})
+                // if it somehow came out bigger, keep what they gave us
+                if (!blob.size || blob.size >= file.size) return resolve(file)
+                const name = file.name.replace(/\.[^.]+$/, "") + ".webm"
+                resolve(new File([blob], name, {type: "video/webm"}))
+            }
+
+            const draw = () => {
+                if (video.ended || video.paused) return
+                pen.drawImage(video, 0, 0, w, h)
+                requestAnimationFrame(draw)
+            }
+            video.onended = () => recorder.state !== "inactive" && recorder.stop()
+            recorder.start()
+            video.play().then(draw).catch(() => { recorder.stop(); resolve(file) })
+        }
+        video.onerror = () => resolve(file)
+    })
+}
+
+// what the post handler calls
+async function Shrink(file, onProgress) {
+    try {
+        if (file.type.startsWith("image/") && file.type !== "image/gif") {
+            return await ShrinkImage(file)
+        }
+        if (file.type.startsWith("video/")) {
+            if (onProgress) onProgress(file.name)
+            return await ShrinkVideo(file)
+        }
+    } catch (e) { console.log("could not shrink", file.name, e) }
+    return file          // anything else goes as it is
+}
+
 // Anything that is not a picture or a video is shown as a row you can download.
 function NiceSize(bytes) {
     if (bytes < 1024) return bytes + " B"
@@ -1541,21 +1647,29 @@ $("body").on("click", "#ToPostButton", async function () {
     Button.prop("disabled", true).text("Posting...")
     try {
         const files = $("#imageAttachToPost")[0].files
-        // Checked here too, so a 200 MB photo is refused instantly instead of
-        // after the whole thing has crawled up to the server.
-        for (const file of files) {
-            if (file.size > MAX_IMAGE) {
-                MessageBubble(`"${Escape(file.name)}" is ${(file.size / 1024 / 1024).toFixed(1)} MB ` +
-                    `\u2014 too big. Pick a smaller one.`)
-                return
-            }
-        }
         if (files.length > MAX_IMAGES) {
             MessageBubble(`Pick ${MAX_IMAGES} at the most \u2014 you chose ${files.length}.`)
             return
         }
+
+        // Shrunk BEFORE the size is judged - a 4 MB photo comes out around
+        // 150 KB, and refusing it beforehand would be refusing nothing.
         const data = new FormData()
-        for (const file of files) data.append("image", file)
+        for (const file of files) {
+            Button.text(`Shrinking ${Shorten(file.name, 18)}...`)
+            const smaller = await Shrink(file, name =>
+                MessageBubble(`Squeezing ${Escape(Shorten(name, 22))} \u2014 a video takes as long as it lasts`))
+            if (smaller.size > MAX_IMAGE) {
+                MessageBubble(`"${Escape(file.name)}" is still ${(smaller.size / 1024 / 1024).toFixed(1)} MB ` +
+                    `after shrinking \u2014 too big. Try a shorter video or a smaller picture.`)
+                return
+            }
+            if (smaller !== file) {
+                console.log(`${file.name}: ${(file.size / 1024).toFixed(0)}KB -> ${(smaller.size / 1024).toFixed(0)}KB`)
+            }
+            data.append("image", smaller)
+        }
+        Button.text("Posting...")
         data.append("post", JSON.stringify({                         // everything else
             index: myIndex, title: Title, text: Text, tags: Tags
         }))
