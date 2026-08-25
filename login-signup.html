@@ -153,7 +153,15 @@
             cursor: pointer; user-select: none;
         }
         .remember input {
-            width: 19px; height: 19px; margin: 0; flex: none;
+            /* The blanket input rule above sets -webkit-appearance: none, which
+               deletes the checkbox itself - no box, no tick, just a dark square
+               that looks the same on and off. Everything it imposed is undone
+               here and the real checkbox put back. */
+            -webkit-appearance: checkbox;
+            appearance: checkbox;
+            width: 19px; height: 19px; min-height: 0;
+            margin: 0; padding: 0; flex: none;
+            background: none; border: none; border-radius: 0;
             accent-color: #a855f7;      /* colours the tick without extra markup */
             cursor: pointer;
         }
@@ -404,10 +412,25 @@
 
     // The server cannot see localStorage, so a cookie is what tells it somebody
     // is signed in and lets "/" redirect on its own.
-    function SetSignedInCookie(on) {
-        document.cookie = on
-            ? "astrogram-in=1; path=/; max-age=" + (60 * 60 * 24 * 365) + "; SameSite=Lax"
-            : "astrogram-in=; path=/; max-age=0";
+    // The cookie has to live exactly as long as the storage it stands for.
+    // A year-long cookie next to sessionStorage means that after the tab is
+    // closed "/" still believes somebody is signed in and sends them to the app,
+    // the app finds nobody and sends them back - round and round for ever.
+    // It is checked in the html, so it came back checked however you left it.
+    // The choice is kept and put back on load.
+    const KEEP_KEY = "astrogram-keep";
+    $(function () {
+        const saved = localStorage.getItem(KEEP_KEY);
+        if (saved !== null) $("#RememberMe").prop("checked", saved === "1");
+    });
+    $("body").on("change", "#RememberMe", function () {
+        localStorage.setItem(KEEP_KEY, this.checked ? "1" : "0");
+    });
+
+    function SetSignedInCookie(on, keep) {
+        if (!on) { document.cookie = "astrogram-in=; path=/; max-age=0"; return }
+        document.cookie = "astrogram-in=1; path=/; SameSite=Lax"
+            + (keep ? "; max-age=" + (60 * 60 * 24 * 365) : "")   // no max-age = until the browser closes
     }
 
     function rememberUser(name, index) {
@@ -417,7 +440,7 @@
 
         store.setItem(USER_KEY, name);
         store.setItem(INDEX_KEY, index);
-        SetSignedInCookie(true);
+        SetSignedInCookie(true, keep);      // same lifetime as the storage above
         // clear the other one, so the two can never disagree about who is here
         other.removeItem(USER_KEY);
         other.removeItem(INDEX_KEY);
@@ -430,7 +453,8 @@
     // cookie. If the browser still has a name saved the two disagree, so put the
     // cookie back and let the route do the redirecting.
     if (currentUser()) {
-        SetSignedInCookie(true);
+        // it is in localStorage if it survived a restart, so it is the keep-me kind
+        SetSignedInCookie(true, !!localStorage.getItem(USER_KEY));
         window.location.replace("/");
     }
 
