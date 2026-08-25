@@ -97,6 +97,9 @@ function PictureOf(index) {
 // Only a guess until /users answers - the real numbers come from the server,
 // because they change with where the data is kept (a disk allows far more than
 // Redis does) and guessing wrong means a 413 the page cannot explain.
+const SHRINK_TO = 1280          // longest side of a shrunk picture, in pixels
+let AIM_FOR = 300 * 1024        // shrink until it is under this
+let PopupBack = null            // what the arrow on a pop-up does, null = no arrow
 let MAX_IMAGES = 10
 let MAX_IMAGE = 400 * 1024
 
@@ -996,7 +999,6 @@ function ClosePopup() {
 
 // What the arrow in the corner does. Null means no arrow at all, which is
 // every pop-up that was not opened from somewhere else.
-let PopupBack = null;
 function AddBackButton(action) {
     PopupBack = action;
     $("#PopupBox").addClass("has-back")
@@ -1075,8 +1077,6 @@ function RememberPost(post) {
 // A phone photo is 3-6 MB and Redis will not take it. Drawn into a canvas at a
 // sane size and saved as webp, the same picture is usually 60-200 KB and looks
 // no different on a screen.
-const SHRINK_TO = 1280          // longest side, in pixels
-let AIM_FOR = 300 * 1024        // keep trying until it is under this
 
 function ShrinkImage(file) {
     return new Promise(resolve => {
