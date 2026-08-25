@@ -1510,6 +1510,8 @@ $("#ActionButton").on("click", function () {
     }
 })
 $("body").on("click", "#ToPostButton", async function () {
+    const Button = $(this)
+    const WasSaying = Button.text()
     let Title = $("#PostTitle").val()
     let Text = $("#PostInput").val()
     let RawTextTags = $("#PostTags").val()
@@ -1527,35 +1529,29 @@ $("body").on("click", "#ToPostButton", async function () {
     Tags.push(NoSpaceAndComa(FillingCurrentText))
     console.log(Tags)
     if (Tags.length < 0 || RawTextTags.length <= 1) {
-        OpenPopup("📝", "Post for your subscribers and friends", "The tags length should be longer than 1 letter", "",
-            "<label for='PostTitle'>Title</label>" +
-            "<input id='PostTitle' type='text' maxlength='60' placeholder='Give it a name'>" +
-            "<label for='PostInput'>What is on your mind</label>" +
-            "<textarea id='PostInput' rows='3' autocorrect='on' autofocus='autofocus' placeholder='Write your post...'></textarea>" +
-            "<label for='PostTags'>Tags</label>" +
-            "<input id='PostTags' type='text' placeholder='space, duck, cool'>" +
-            "<p class='post-hint'>At least one tag is needed. Separate them with a comma. Spaces are removed automatically \u2014 use '-' if you want a gap.</p>" +
-            "<label for='imageAttachToPost'>Attach photos, video or files <span class='optional'>(optional, up to 10)</span></label>" +
-            "<input type='file' id='imageAttachToPost' multiple>" +
-            "<button id='ToPostButton'>Post!</button>"
-        )
+        // A pop-up is not the place to complain: OpenPopup closes this one, and their
+        // title, text and chosen files go with it. A bubble leaves everything alone.
+        MessageBubble(t("tagTooShort") || "Every tag needs more than one letter")
+        $("#PostTags").trigger("focus")
         return
     }
+    // Turned off here, after the checks that leave early - the finally below
+    // only runs for what is inside the try, so switching it off any sooner
+    // would leave the button dead on those paths.
+    Button.prop("disabled", true).text("Posting...")
     try {
         const files = $("#imageAttachToPost")[0].files
         // Checked here too, so a 200 MB photo is refused instantly instead of
         // after the whole thing has crawled up to the server.
         for (const file of files) {
             if (file.size > MAX_IMAGE) {
-                OpenPopup("&#128683;", "Image too big",
-                    `"${file.name}" is ${(file.size / 1024 / 1024).toFixed(1)} MB. ` +
-                    `The limit is 50 MB each.`, "bad")
+                MessageBubble(`"${Escape(file.name)}" is ${(file.size / 1024 / 1024).toFixed(1)} MB ` +
+                    `\u2014 too big. Pick a smaller one.`)
                 return
             }
         }
         if (files.length > MAX_IMAGES) {
-            OpenPopup("&#128683;", "Too many images",
-                `Pick ${MAX_IMAGES} at the most \u2014 you chose ${files.length}.`, "bad")
+            MessageBubble(`Pick ${MAX_IMAGES} at the most \u2014 you chose ${files.length}.`)
             return
         }
         const data = new FormData()
@@ -1575,17 +1571,17 @@ $("body").on("click", "#ToPostButton", async function () {
             MessageBubble("Posted!")
         }
         else if (response.status === 201) {
-            OpenPopup("&#128683;", `Something is wrong`, "Somehow, your account doesn't exists, please contact +998 (90) 011 29 33 or aka. AstroVoid24 (Saidumar Holmirzaev)");
+            MessageBubble("Somehow your account does not exist. Tell AstroVoid24.")
         }
         else {
-            OpenPopup("&#128683;", "Could not post", await response.text(), "bad");
+            MessageBubble(await response.text())
         }
         console.log(response);
     }
     catch (e) {
-        OpenPopup("&#128246;", "Cannot reach Astrogram",
-            "The server is not answering.<br>Is it running?  <b>bun --watch Astrogram-Server.js</b>", "bad");
+        MessageBubble("Could not reach Astrogram. Nothing was posted.")
     }
+    finally { Button.prop("disabled", false).text(WasSaying) }
 })
 //| ==== Account showing ==== |\\
 // Whether I am subscribed is already in the subscribers list that came with the
