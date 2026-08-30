@@ -114,6 +114,26 @@ const MyLikes = new Set(), MyDislikes = new Set(), LikeCounts = new Map()
 // {n} style holes are filled by the second argument to t().
 const TEXT = {
     en: {
+        postTitle: "Post for your subscribers and friends",
+        titleLabel: "Title",
+        titlePh: "Give it a name",
+        whatsOnMind: "What is on your mind",
+        postPh: "Write your post...",
+        tagsLabel: "Tags",
+        tagsPh: "space, duck, cool",
+        tagHint: "At least one tag is needed. Separate them with a comma. Spaces are removed automatically — use '-' if you want a gap.",
+        attach: "Attach photos, video or files",
+        optional10: "(optional, up to 10)",
+        postIt: "Post!",
+        tagTooShort: "Every tag needs more than one letter",
+        tooMany: "Pick {n} at the most — you chose {c}.",
+        shrinking: "Shrinking {name}...",
+        squeezing: "Squeezing {name} — a video takes as long as it lasts",
+        stillTooBig: "\"{name}\" is still {mb} MB after shrinking — too big. Try a shorter video or a smaller picture.",
+        posting: "Posting...",
+        posted: "Posted!",
+        noAccount: "Somehow your account does not exist. Tell AstroVoid24.",
+        cantPost: "Could not reach Astrogram. Nothing was posted.",
         settings: "Settings",
         settingsHint: "Your account and how the app looks.",
         language: "Language",
@@ -145,6 +165,26 @@ const TEXT = {
         cannotReach: "Cannot reach Astrogram",
     },
     ru: {
+        postTitle: "Пост для подписчиков и друзей",
+        titleLabel: "Заголовок",
+        titlePh: "Придумайте название",
+        whatsOnMind: "О чём вы думаете",
+        postPh: "Напишите пост...",
+        tagsLabel: "Теги",
+        tagsPh: "космос, утка, круто",
+        tagHint: "Нужен хотя бы один тег. Разделяйте запятой. Пробелы удаляются — используйте '-' если нужен пробел.",
+        attach: "Прикрепить фото, видео или файлы",
+        optional10: "(необязательно, до 10)",
+        postIt: "Опубликовать!",
+        tagTooShort: "В каждом теге должно быть больше одной буквы",
+        tooMany: "Не больше {n} — вы выбрали {c}.",
+        shrinking: "Сжимаю {name}...",
+        squeezing: "Сжимаю {name} — видео занимает столько же, сколько длится",
+        stillTooBig: "\"{name}\" всё ещё {mb} МБ после сжатия — слишком много. Возьмите короче или меньше.",
+        posting: "Публикую...",
+        posted: "Опубликовано!",
+        noAccount: "Вашего аккаунта почему-то нет. Скажите AstroVoid24.",
+        cantPost: "Не удалось связаться с Astrogram. Ничего не опубликовано.",
         settings: "Настройки",
         settingsHint: "Ваш аккаунт и вид приложения.",
         language: "Язык",
@@ -176,6 +216,26 @@ const TEXT = {
         cannotReach: "Не удаётся связаться с Astrogram",
     },
     uz: {
+        postTitle: "Obunachilar va do'stlar uchun post",
+        titleLabel: "Sarlavha",
+        titlePh: "Nom bering",
+        whatsOnMind: "Nima o'ylayapsiz",
+        postPh: "Postingizni yozing...",
+        tagsLabel: "Teglar",
+        tagsPh: "koinot, o'rdak, zo'r",
+        tagHint: "Kamida bitta teg kerak. Vergul bilan ajrating. Bo'shliqlar olib tashlanadi — kerak bo'lsa '-' ishlating.",
+        attach: "Rasm, video yoki fayl qo'shish",
+        optional10: "(ixtiyoriy, 10 tagacha)",
+        postIt: "Joylash!",
+        tagTooShort: "Har bir tegda bittadan ko'p harf bo'lishi kerak",
+        tooMany: "Ko'pi bilan {n} — siz {c} tanladingiz.",
+        shrinking: "{name} siqilmoqda...",
+        squeezing: "{name} siqilmoqda — video qancha davom etsa, shuncha vaqt oladi",
+        stillTooBig: "\"{name}\" siqilgandan keyin ham {mb} MB — juda katta. Qisqaroq yoki kichikroq oling.",
+        posting: "Joylanmoqda...",
+        posted: "Joylandi!",
+        noAccount: "Hisobingiz qandaydir yo'q. AstroVoid24 ga ayting.",
+        cantPost: "Astrogram bilan bog'lanib bo'lmadi. Hech narsa joylanmadi.",
         settings: "Sozlamalar",
         settingsHint: "Hisobingiz va ilova ko'rinishi.",
         language: "Til",
@@ -1659,17 +1719,17 @@ $("#IsBanned").on("input", function () {
 
 $("#ActionButton").on("click", function () {
     {
-        OpenPopup("📝", "Post for your subscribers and friends", "", "",
-            "<label for='PostTitle'>Title</label>" +
-            "<input id='PostTitle' type='text' maxlength='60' placeholder='Give it a name'>" +
-            "<label for='PostInput'>What is on your mind</label>" +
-            "<textarea id='PostInput' rows='3' autocorrect='on' autofocus='autofocus' placeholder='Write your post...'></textarea>" +
-            "<label for='PostTags'>Tags</label>" +
-            "<input id='PostTags' type='text' placeholder='space, duck, cool'>" +
-            "<p class='post-hint'>At least one tag is needed. Separate them with a comma. Spaces are removed automatically \u2014 use '-' if you want a gap.</p>" +
-            "<label for='imageAttachToPost'>Attach photos, video or files <span class='optional'>(optional, up to 10)</span></label>" +
-            "<input type='file' id='imageAttachToPost' multiple>" +
-            "<button id='ToPostButton'>Post!</button>"
+        OpenPopup("📝", t("postTitle"), "", "",
+            `<label for="PostTitle">${t("titleLabel")}</label>` +
+            `<input id="PostTitle" type="text" maxlength="60" placeholder="${t("titlePh")}">` +
+            `<label for="PostInput">${t("whatsOnMind")}</label>` +
+            `<textarea id="PostInput" rows="3" autocorrect="on" autofocus="autofocus" placeholder="${t("postPh")}"></textarea>` +
+            `<label for="PostTags">${t("tagsLabel")}</label>` +
+            `<input id="PostTags" type="text" placeholder="${t("tagsPh")}">` +
+            `<p class="post-hint">${t("tagHint")}</p>` +
+            `<label for="imageAttachToPost">${t("attach")} <span class="optional">${t("optional10")}</span></label>` +
+            `<input type="file" id="imageAttachToPost" multiple>` +
+            `<button id="ToPostButton">${t("postIt")}</button>`
         )
     }
 })
@@ -1695,18 +1755,18 @@ $("body").on("click", "#ToPostButton", async function () {
     if (Tags.length < 0 || RawTextTags.length <= 1) {
         // A pop-up is not the place to complain: OpenPopup closes this one, and their
         // title, text and chosen files go with it. A bubble leaves everything alone.
-        MessageBubble(t("tagTooShort") || "Every tag needs more than one letter")
+        MessageBubble(t("tagTooShort"))
         $("#PostTags").trigger("focus")
         return
     }
     // Turned off here, after the checks that leave early - the finally below
     // only runs for what is inside the try, so switching it off any sooner
     // would leave the button dead on those paths.
-    Button.prop("disabled", true).text("Posting...")
+    Button.prop("disabled", true).text(t("posting"))
     try {
         const files = $("#imageAttachToPost")[0].files
         if (files.length > MAX_IMAGES) {
-            MessageBubble(`Pick ${MAX_IMAGES} at the most \u2014 you chose ${files.length}.`)
+            MessageBubble(t("tooMany", {n: MAX_IMAGES, c: files.length}))
             return
         }
 
@@ -1714,12 +1774,11 @@ $("body").on("click", "#ToPostButton", async function () {
         // 150 KB, and refusing it beforehand would be refusing nothing.
         const data = new FormData()
         for (const file of files) {
-            Button.text(`Shrinking ${Shorten(file.name, 18)}...`)
+            Button.text(t("shrinking", {name: Shorten(file.name, 18)}))
             const smaller = await Shrink(file, name =>
-                MessageBubble(`Squeezing ${Escape(Shorten(name, 22))} \u2014 a video takes as long as it lasts`))
+                MessageBubble(t("squeezing", {name: Escape(Shorten(name, 22))})))
             if (smaller.size > MAX_IMAGE) {
-                MessageBubble(`"${Escape(file.name)}" is still ${(smaller.size / 1024 / 1024).toFixed(1)} MB ` +
-                    `after shrinking \u2014 too big. Try a shorter video or a smaller picture.`)
+                MessageBubble(t("stillTooBig", {name: Escape(file.name), mb: (smaller.size / 1024 / 1024).toFixed(1)}))
                 return
             }
             if (smaller !== file) {
@@ -1727,7 +1786,7 @@ $("body").on("click", "#ToPostButton", async function () {
             }
             data.append("image", smaller)
         }
-        Button.text("Posting...")
+        Button.text(t("posting"))
         data.append("post", JSON.stringify({                         // everything else
             index: myIndex, title: Title, text: Text, tags: Tags
         }))
@@ -1748,10 +1807,10 @@ $("body").on("click", "#ToPostButton", async function () {
         if (response.status === 200) {
             await showMyInfo()
             ClosePopup()
-            MessageBubble("Posted!")
+            MessageBubble(t("posted"))
         }
         else if (response.status === 201) {
-            MessageBubble("Somehow your account does not exist. Tell AstroVoid24.")
+            MessageBubble(t("noAccount"))
         }
         else {
             MessageBubble(await response.text())
@@ -1759,7 +1818,7 @@ $("body").on("click", "#ToPostButton", async function () {
         console.log(response);
     }
     catch (e) {
-        MessageBubble("Could not reach Astrogram. Nothing was posted.")
+        MessageBubble(t("cantPost"))
     }
     finally { Button.prop("disabled", false).text(WasSaying) }
 })

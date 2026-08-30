@@ -97,11 +97,22 @@ function IsPicture(name) {
     return PICTURE_TYPES.includes(name.split(".").pop().toLowerCase())
 }
 
+// The page, the styling and the script must never be kept. Without a header
+// saying so the browser decides for itself, and a phone will happily run last
+// week's Main.js - which looks exactly like a fix that did not work.
+// Pictures are different: their names never change, so they can be kept.
+const NEVER_KEEP = []
+
 async function ServeFile(path, headers = {}) {
     const bytes = await ReadBytes(path)
     if (!bytes) return new Response("Not found", {status: 404, headers})
     const ext = path.split(".").pop().toLowerCase()
-    return new Response(bytes, {headers: {...headers, "Content-Type": TYPES[ext] || "application/octet-stream"}})
+    const keep = NEVER_KEEP.includes(ext)
+        ? "no-cache, no-store, must-revalidate"
+        : "public, max-age=31536000"
+    return new Response(bytes, {headers: {...headers,
+        "Content-Type": TYPES[ext] || "application/octet-stream",
+        "Cache-Control": keep}})
 }
 
 let Users = [
@@ -281,9 +292,7 @@ const RESERVED = [
     "system", "root", "owner", "staff", "official", "help"
 ]
 
-// The same letters in disguise: @ for a, 0 for o, 1 for i, and so on. Spaces,
-// dots and underscores go too, so "a d m i n" and "a.d.m.i.n" are seen for what
-// they are.
+
 function PlainName(name) {
     return (name || "").toLowerCase()
         .replace(/[@4]/g, "a").replace(/[1!|]/g, "i").replace(/0/g, "o")

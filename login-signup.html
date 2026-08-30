@@ -258,6 +258,41 @@
     .remember:hover { color: #c4b5fd; }
     #PopupClose:hover { color: #a855f7; }
     }
+/* ===== THE LANGUAGE CHOOSER ===== */
+#LangAsk {
+    display: none;
+    position: fixed; inset: 0; z-index: 200;
+    background: rgba(5,5,31,.86);
+    align-items: center; justify-content: center;
+    padding: 20px;
+}
+#LangAsk.on { display: flex; }
+.lang-box {
+    width: 100%; max-width: 320px;
+    padding: 26px 22px; text-align: center;
+    background: linear-gradient(145deg, #0a0a2e, #1a1a4a);
+    border: 1px solid #4b0082; border-radius: 16px;
+    box-shadow: 0 0 26px rgba(138,43,226,.6);
+}
+.lang-box h3 { margin: 0 0 18px; font-size: 15px; font-weight: 700; color: #c4b5fd; line-height: 1.5; }
+.lang-choice {
+    display: block; width: 100%; margin-top: 9px; padding: 14px;
+    font-family: inherit; font-size: 16px; font-weight: 700;
+    color: #e0e0ff; background: rgba(10,10,46,.7);
+    border: 1px solid #34246b; border-radius: 11px; cursor: pointer;
+    transition: border-color .16s, background .16s;
+}
+/* the small one under the card, for changing it afterwards */
+#LangAgain {
+    display: block; margin: 14px auto 0; padding: 8px 16px;
+    font-family: inherit; font-size: 12px;
+    color: #7a7a9e; background: transparent;
+    border: 1px solid #2d2d55; border-radius: 999px; cursor: pointer;
+}
+@media (hover: hover) and (pointer: fine) {
+    .lang-choice:hover { border-color: #a855f7; background: rgba(168,85,247,.16); }
+    #LangAgain:hover { color: #c4b5fd; border-color: #a855f7; }
+}
 </style>
 </head>
 <body>
@@ -284,14 +319,26 @@
 <h1>Astro<span class="accent">gram</span></h1>
 <p class="tagline">by AstroVoid24</p>
 
+<!-- shown only until somebody picks, then never again unless they ask -->
+<button id="LangAgain" type="button"><span>&#127760;</span> <span id="LangNow">English</span></button>
+
+<div id="LangAsk">
+    <div class="lang-box">
+        <h3>Choose your language</h3>
+        <button class="lang-choice" data-lang="en">English</button>
+        <button class="lang-choice" data-lang="ru">Русский</button>
+        <button class="lang-choice" data-lang="uz">O'zbekcha</button>
+    </div>
+</div>
+
 <div id="LoginPage" class="card">
-    <h2>Welcome back</h2>
-    <p class="hint">Log in</p>
+    <h2 data-say="welcome">Welcome back</h2>
+    <p class="hint" data-say="login">Log in</p>
 
-    <label for="Username">Username</label>
-    <input type="text" id="Username" autocomplete="username" placeholder="Your Name">
+    <label for="Username" data-say="username">Username</label>
+    <input type="text" id="Username" autocomplete="username" placeholder="Your Name" data-say-ph="namePh">
 
-    <label for="Password">Password</label>
+    <label for="Password" data-say="password">Password</label>
     <div class="pw-wrap">
         <input type="password" id="Password" autocomplete="current-password" placeholder="••••••••">
         <button type="button" class="eye" data-for="Password" aria-label="Show password" title="Show password">
@@ -312,24 +359,21 @@
          twice, so the box never appears to change -->
     <label class="remember">
         <input type="checkbox" id="RememberMe" checked>
-        Keep me logged in
+        <span data-say="keep">Keep me logged in</span>
     </label>
 
-    <button id="Login" class="primary">Log in</button>
-    <button id="NoAccount" class="secondary">I don't have an account</button>
+    <button id="Login" class="primary" data-say="login">Log in</button>
+    <button id="NoAccount" class="secondary" data-say="noAccount">I don't have an account</button>
 </div>
 
 <div id="SignUpPage" class="card">
-    <h2>Sign up</h2>
-    <p class="hint">Pick a username and a password.</p>
+    <h2 data-say="signup">Sign up</h2>
+    <p class="hint" data-say="pick">Pick a username and a password.</p>
 
-    <label for="AccountEmail">Your Mail: </label>
-    <input type="text" id="AccountEmail" autocomplete="email" placeholder="MyBestEmail@CoolMail.com">
+    <label for="NewUsername" data-say="makeName">Create a Username</label>
+    <input type="text" id="NewUsername" autocomplete="nickname" placeholder="Choose a name" data-say-ph="namePh2">
 
-    <label for="NewUsername">Create a Username</label>
-    <input type="text" id="NewUsername" autocomplete="nickname" placeholder="Choose a name">
-
-    <label for="NewPassword">Create a Password</label>
+    <label for="NewPassword" data-say="makePass">Create a Password</label>
     <div class="pw-wrap">
         <input type="password" id="NewPassword" autocomplete="new-password" placeholder="••••••••">
         <button type="button" class="eye" data-for="NewPassword" aria-label="Show password" title="Show password">
@@ -346,8 +390,8 @@
         </button>
     </div>
 
-    <button id="SignUp" class="primary">Sign Up</button>
-    <button id="HaveAccount" class="secondary">I have an account</button>
+    <button id="SignUp" class="primary" data-say="signupGo">Sign Up</button>
+    <button id="HaveAccount" class="secondary" data-say="haveAccount">I have an account</button>
 </div>
 
 <script>
@@ -418,6 +462,61 @@
     // the app finds nobody and sends them back - round and round for ever.
     // It is checked in the html, so it came back checked however you left it.
     // The choice is kept and put back on load.
+    //| ====== LANGUAGE ====== |\\
+    // This page is on its own - it has none of the app's dictionary, so it
+    // carries the handful of words it needs.
+    const LANG_KEY = "astrogram-lang";
+    const LANG_NAMES = {en: "English", ru: "Русский", uz: "O'zbekcha"};
+    const SAY = {
+        en: {welcome:"Welcome back", login:"Log in", username:"Username", password:"Password",
+             namePh:"Your Name", noAccount:"I don't have an account", signup:"Sign up",
+             pick:"Pick a username and a password.", makeName:"Create a Username",
+             makePass:"Create a Password", namePh2:"Choose a name", signupGo:"Sign Up",
+             haveAccount:"I have an account", keep:"Keep me logged in",
+             chooseLang:"Choose your language"},
+        ru: {welcome:"С возвращением", login:"Войти", username:"Имя пользователя", password:"Пароль",
+             namePh:"Ваше имя", noAccount:"У меня нет аккаунта", signup:"Регистрация",
+             pick:"Придумайте имя и пароль.", makeName:"Придумайте имя",
+             makePass:"Придумайте пароль", namePh2:"Выберите имя", signupGo:"Зарегистрироваться",
+             haveAccount:"У меня есть аккаунт", keep:"Оставаться в системе",
+             chooseLang:"Выберите язык"},
+        uz: {welcome:"Xush kelibsiz", login:"Kirish", username:"Foydalanuvchi nomi", password:"Parol",
+             namePh:"Ismingiz", noAccount:"Menda hisob yo'q", signup:"Ro'yxatdan o'tish",
+             pick:"Ism va parol tanlang.", makeName:"Ism yarating",
+             makePass:"Parol yarating", namePh2:"Ism tanlang", signupGo:"Ro'yxatdan o'tish",
+             haveAccount:"Menda hisob bor", keep:"Meni eslab qol",
+             chooseLang:"Tilni tanlang"},
+    };
+    let lang = localStorage.getItem(LANG_KEY);
+
+    function say(key) {
+        return (SAY[lang] && SAY[lang][key]) || SAY.en[key] || key;
+    }
+
+    function PaintLanguage() {
+        $("[data-say]").each(function () { $(this).text(say($(this).data("say"))); });
+        $("[data-say-ph]").each(function () { $(this).attr("placeholder", say($(this).data("say-ph"))); });
+        $("html").attr("lang", lang || "en");
+        $("#LangNow").text(LANG_NAMES[lang] || "English");
+    }
+
+    // Nobody has chosen yet, so ask before anything else
+    function AskLanguage() {
+        $("#LangAsk").addClass("on").find("h3").text(SAY.en.chooseLang + " / " + SAY.ru.chooseLang);
+    }
+    $("body").on("click", ".lang-choice", function () {
+        lang = $(this).data("lang");
+        localStorage.setItem(LANG_KEY, lang);
+        $("#LangAsk").removeClass("on");
+        PaintLanguage();
+    });
+    $("body").on("click", "#LangAgain", function () { $("#LangAsk").addClass("on"); });
+
+    $(function () {
+        if (!lang) AskLanguage();
+        PaintLanguage();
+    });
+
     const KEEP_KEY = "astrogram-keep";
     $(function () {
         const saved = localStorage.getItem(KEEP_KEY);
@@ -594,10 +693,13 @@
     $("#SignUp").on("click", async function (){
         const name = $("#NewUsername").val().trim();
         const pass = $("#NewPassword").val();
-        const mail = $("#AccountEmail").val().trim();
+        // No email field any more - the server only wants one while EMAIL_ON is
+        // true, and it is not. It is sent empty so the shape of the request does
+        // not change if that switch is ever flipped back.
+        const mail = "";
 
-        if (!name || !pass || !mail) {
-            OpenPopup("&#9888;", "Hold on", "Fill in both the username, password and", "warn");
+        if (!name || !pass) {
+            OpenPopup("&#9888;", "Hold on", "Fill in the username and the password.", "warn");
             return;
         }
 
